@@ -1,0 +1,1380 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Public Employment Service Office</title>
+    <meta
+      name="description"
+      content="Free employment facilitation, training referrals and labor market information for jobseekers and employers."
+    />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600;6..72,700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/styles.css" />
+  </head>
+  <body>
+    <a class="skip" id="skip" href="#main">Skip to main content</a>
+    <div id="toasts" aria-live="polite"></div>
+
+    <div id="landing">
+      <div class="notice" id="notice">
+        <div class="container">
+          <span
+            >All PESO services are free. Never pay a fee to anyone claiming to
+            process your application.</span
+          ><button type="button" id="noticeX" aria-label="Dismiss notice">
+            ×
+          </button>
+        </div>
+      </div>
+      <header class="nav">
+        <div class="container">
+          <a
+            class="brand"
+            href="#top"
+            aria-label="Public Employment Service Office, home"
+            ><span class="mark" aria-hidden="true">PESO</span
+            ><span
+              ><strong>Public Employment Service Office</strong
+              ><small>Department of Labor and Employment</small></span
+            ></a
+          >
+          <button
+            class="toggle"
+            id="navToggle"
+            type="button"
+            aria-expanded="false"
+            aria-controls="navLinks"
+            aria-label="Open menu"
+          >
+            <i></i>
+          </button>
+          <nav class="links" id="navLinks" aria-label="Main">
+            <a class="l" href="#trends">Market trends</a
+            ><a class="l" href="#services">Services</a
+            ><a class="l" href="#programs">Programs</a
+            ><a class="l" href="#join">Create account</a>
+            <button class="btn btn-line themeBtn" type="button">
+              Dark mode
+            </button>
+            <button class="btn btn-line" type="button" data-login="jobseeker">
+              Log in
+            </button>
+            <a class="btn btn-gold" href="#join" data-join="jobseeker"
+              >Register</a
+            >
+          </nav>
+        </div>
+      </header>
+      <div class="scrim" id="scrim"></div>
+
+      <main id="main">
+        <span id="top"></span>
+        <section class="hero" aria-labelledby="h1">
+          <svg
+            class="sun"
+            id="sun"
+            viewBox="-200 -200 400 400"
+            aria-hidden="true"
+            fill="none"
+            stroke="#e2b44f"
+            stroke-width="2"
+          >
+            <circle r="52" />
+            <circle r="64" stroke-width="1" />
+          </svg>
+          <div class="container hero-grid">
+            <div>
+              <h1 id="h1">Work starts here. Free, fair and close to home.</h1>
+              <p class="lead">
+                PESO connects residents, employers and training providers
+                through a free public employment service. Log in to see current
+                job offers.
+              </p>
+              <div class="cta">
+                <a class="btn btn-gold" href="#join" data-role-link="jobseeker"
+                  >I'm looking for work</a
+                ><a class="btn btn-glass" href="#join" data-role-link="employer"
+                  >I'm hiring</a
+                ><button
+                  class="btn btn-glass"
+                  type="button"
+                  data-login="jobseeker"
+                >
+                  Log in
+                </button>
+              </div>
+              <ul class="badges">
+                <li>100% free service</li>
+                <li>Verified employers</li>
+                <li>Supervised by DOLE</li>
+              </ul>
+            </div>
+            <aside class="live" aria-labelledby="liveT">
+              <h2 id="liveT">
+                <span class="dot" aria-hidden="true"></span>Live from the
+                registry
+              </h2>
+              <div class="nums">
+                <div>
+                  <b id="cVac" data-count="1248">0</b
+                  ><span>Open vacancies</span>
+                </div>
+                <div>
+                  <b data-count="18460">0</b><span>Registered jobseekers</span>
+                </div>
+                <div>
+                  <b data-count="326">0</b><span>Verified employers</span>
+                </div>
+                <div>
+                  <b data-count="4912">0</b><span>Placed this year</span>
+                </div>
+              </div>
+              <small id="upd">Sample figures for demonstration.</small>
+            </aside>
+          </div>
+        </section>
+
+        <section class="ticker" aria-label="In-demand skills for 2026">
+          <h2>In demand, 2026</h2>
+          <div class="tk" id="tk"><div class="tk-in" id="tkIn"></div></div>
+          <button type="button" id="tkBtn" aria-pressed="false">Pause</button>
+        </section>
+
+        <section class="block" id="trends" aria-labelledby="tT">
+          <div class="container">
+            <div class="sh">
+              <h2 id="tT">Upcoming job fairs and notices</h2>
+              <p>
+                On-the-spot interviews with verified employers. Bring printed
+                copies of your resume and a valid ID.
+              </p>
+            </div>
+            <div class="grid">
+              <article class="card fair">
+                <time datetime="2026-11-14">Sat, Nov 14, 2026</time>
+                <h3>Mega Job Fair</h3>
+                <p>
+                  Over 80 employers hiring in BPO, manufacturing and retail.
+                  Registered jobseekers get priority queueing.
+                </p>
+              </article>
+              <article class="card fair">
+                <time datetime="2026-12-03">Thu, Dec 3, 2026</time>
+                <h3>Skills and Scholarship Day</h3>
+                <p>
+                  Apply for funded technical and digital training slots and meet
+                  accredited schools.
+                </p>
+              </article>
+              <article class="card fair">
+                <time datetime="2027-01-16">Sat, Jan 16, 2027</time>
+                <h3>Youth and Special Placements Fair</h3>
+                <p>
+                  Inclusive hiring for students, persons with disabilities and
+                  returning workers.
+                </p>
+              </article>
+            </div>
+            <p class="note">
+              Dates, venues and skill-demand figures are sample entries.
+            </p>
+          </div>
+        </section>
+
+        <section class="block alt" id="services" aria-labelledby="sT">
+          <div class="container">
+            <div class="sh">
+              <h2 id="sT">Six services, no cost to you</h2>
+              <p>Open to every resident and registered employer.</p>
+            </div>
+            <div class="grid">
+              <article class="card">
+                <div class="ic" aria-hidden="true">🤝</div>
+                <h3>Employment facilitation</h3>
+                <p>We match qualified applicants with verified employers.</p>
+              </article>
+              <article class="card">
+                <div class="ic" aria-hidden="true">🧭</div>
+                <h3>Career coaching</h3>
+                <p>Resume help and interview practice, one on one.</p>
+              </article>
+              <article class="card">
+                <div class="ic" aria-hidden="true">📋</div>
+                <h3>Skills assessment</h3>
+                <p>
+                  Find the fields and growth paths that suit your competencies.
+                </p>
+              </article>
+              <article class="card">
+                <div class="ic" aria-hidden="true">🎓</div>
+                <h3>Training coordination</h3>
+                <p>Referral to accredited schools for technical courses.</p>
+              </article>
+              <article class="card">
+                <div class="ic" aria-hidden="true">📊</div>
+                <h3>Labor market information</h3>
+                <p>
+                  Data on hiring industries, in-demand skills and local trends.
+                </p>
+              </article>
+              <article class="card">
+                <div class="ic" aria-hidden="true">🏪</div>
+                <h3>Entrepreneurship preparation</h3>
+                <p>
+                  Practical guidance for community-based livelihood ventures.
+                </p>
+              </article>
+            </div>
+          </div>
+        </section>
+
+        <section class="block" id="programs" aria-labelledby="pT">
+          <div class="container">
+            <div class="sh"><h2 id="pT">Programs that open doors</h2></div>
+            <div class="grid">
+              <article class="card">
+                <span class="tag">Hiring event</span>
+                <h3>Mega job fairs</h3>
+                <p>
+                  Many verified employers in one venue, with fast-tracked
+                  hiring.
+                </p>
+              </article>
+              <article class="card">
+                <span class="tag">Youth</span>
+                <h3>Youth employment</h3>
+                <p>
+                  Short-term work during school breaks to build early
+                  experience.
+                </p>
+              </article>
+              <article class="card">
+                <span class="tag">Crisis response</span>
+                <h3>Emergency livelihood</h3>
+                <p>
+                  Short-term community work for displaced and seasonal workers.
+                </p>
+              </article>
+              <article class="card">
+                <span class="tag">Training</span>
+                <h3>Skills scholarships</h3>
+                <p>Funded slots in technical, mechanical and digital skills.</p>
+              </article>
+              <article class="card">
+                <span class="tag">Inclusive</span>
+                <h3>Special local placements</h3>
+                <p>
+                  For persons with disabilities, senior citizens and returning
+                  migrant workers.
+                </p>
+              </article>
+              <article class="card">
+                <span class="tag">Job readiness</span>
+                <h3>Work appreciation seminars</h3>
+                <p>
+                  Workplace conduct, ethics and soft skills before you start.
+                </p>
+              </article>
+            </div>
+          </div>
+        </section>
+
+        <section class="block alt" id="join">
+          <div class="container">
+            <div class="sh">
+              <h2>Create your account</h2>
+              <p>
+                Registering unlocks job offers. Required fields are marked with
+                an asterisk (<span class="req">*</span>). All PESO services are
+                free.
+              </p>
+            </div>
+
+            <div class="tabs" role="tablist" aria-label="Account type">
+              <button
+                type="button"
+                role="tab"
+                aria-selected="true"
+                data-role="jobseeker"
+              >
+                Jobseeker
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected="false"
+                data-role="employer"
+              >
+                Employer or recruiter
+              </button>
+            </div>
+
+            <div class="shell">
+              <form
+                id="joinForm"
+                action="register.php"
+                method="post"
+                enctype="multipart/form-data"
+                novalidate
+              >
+                <!-- tells PHP which table to branch into -->
+                <input
+                  type="hidden"
+                  name="role"
+                  id="roleInput"
+                  value="jobseeker"
+                />
+
+                <div class="whead" id="wizHead">
+                  <ol class="wsteps" id="wizSteps">
+                    <li class="on"><i>1</i>Account and profile</li>
+                    <li><i>2</i>Skills and resume</li>
+                    <li><i>3</i>Job preferences</li>
+                  </ol>
+                  <div class="bar">
+                    <div id="wizBar" style="width: 33.3%"></div>
+                  </div>
+                </div>
+
+                <!-- ============ STEP 1 : shared + role-specific ============ -->
+                <div class="wpanel" data-step="1">
+                  <h3>Account and profile</h3>
+                  <p class="help">
+                    Use an email address you check often. PESO will send your
+                    tracking ID and verification updates there.
+                  </p>
+
+                  <div class="alert" id="formAlert" role="alert"></div>
+
+                  <div class="fg">
+                    <div class="field">
+                      <label for="first_name"
+                        >First name <span class="req">*</span></label
+                      >
+                      <input
+                        id="first_name"
+                        name="first_name"
+                        type="text"
+                        autocomplete="given-name"
+                        required
+                      />
+                      <span class="error">Please enter your first name.</span>
+                    </div>
+
+                    <div class="field">
+                      <label for="last_name"
+                        >Last name <span class="req">*</span></label
+                      >
+                      <input
+                        id="last_name"
+                        name="last_name"
+                        type="text"
+                        autocomplete="family-name"
+                        required
+                      />
+                      <span class="error">Please enter your last name.</span>
+                    </div>
+
+                    <div class="field">
+                      <label for="email"
+                        >Email address <span class="req">*</span></label
+                      >
+                      <input
+                        id="email"
+                        name="email"
+                        type="email"
+                        autocomplete="email"
+                        required
+                      />
+                      <span class="error"
+                        >Please enter a valid email address.</span
+                      >
+                    </div>
+
+                    <div class="field">
+                      <label for="mobile"
+                        >Mobile number <span class="req">*</span></label
+                      >
+                      <input
+                        id="mobile"
+                        name="mobile"
+                        type="tel"
+                        inputmode="tel"
+                        placeholder="09XX XXX XXXX"
+                        autocomplete="tel"
+                        required
+                      />
+                      <span class="error"
+                        >Please enter a valid mobile number.</span
+                      >
+                    </div>
+
+                    <div class="field">
+                      <label for="password"
+                        >Password <span class="req">*</span></label
+                      >
+                      <div class="pw">
+                        <input
+                          id="password"
+                          name="password"
+                          type="password"
+                          minlength="8"
+                          autocomplete="new-password"
+                          required
+                        />
+                        <button type="button" data-toggle-pw="password">
+                          Show
+                        </button>
+                      </div>
+                      <span class="hint">At least 8 characters.</span>
+                      <span class="error"
+                        >Password must be at least 8 characters.</span
+                      >
+                    </div>
+
+                    <div class="field">
+                      <label for="confirm_password"
+                        >Confirm password <span class="req">*</span></label
+                      >
+                      <div class="pw">
+                        <input
+                          id="confirm_password"
+                          name="confirm_password"
+                          type="password"
+                          minlength="8"
+                          autocomplete="new-password"
+                          required
+                        />
+                        <button type="button" data-toggle-pw="confirm_password">
+                          Show
+                        </button>
+                      </div>
+                      <span class="error">Passwords do not match.</span>
+                    </div>
+
+                    <!-- ---- jobseeker only ---- -->
+                    <div class="field" data-role-only="jobseeker">
+                      <label for="birthdate"
+                        >Date of birth <span class="req">*</span></label
+                      >
+                      <input
+                        id="birthdate"
+                        name="birthdate"
+                        type="date"
+                        required
+                      />
+                      <span class="error"
+                        >Please enter your date of birth.</span
+                      >
+                    </div>
+
+                    <div class="field" data-role-only="jobseeker">
+                      <label for="sex">Sex <span class="req">*</span></label>
+                      <select id="sex" name="sex" required>
+                        <option value="">Select…</option>
+                        <option value="female">Female</option>
+                        <option value="male">Male</option>
+                        <option value="undisclosed">Prefer not to say</option>
+                      </select>
+                      <span class="error">Please select an option.</span>
+                    </div>
+
+                    <div class="field" data-role-only="jobseeker">
+                      <label for="barangay"
+                        >Barangay <span class="req">*</span></label
+                      >
+                      <input
+                        id="barangay"
+                        name="barangay"
+                        type="text"
+                        required
+                      />
+                      <span class="error">Please enter your barangay.</span>
+                    </div>
+
+                    <div class="field" data-role-only="jobseeker">
+                      <label for="city"
+                        >City or municipality <span class="req">*</span></label
+                      >
+                      <input id="city" name="city" type="text" required />
+                      <span class="error"
+                        >Please enter your city or municipality.</span
+                      >
+                    </div>
+
+                    <!-- ---- employer only ---- -->
+                    <div class="field" data-role-only="employer" hidden>
+                      <label for="company_name"
+                        >Company or establishment
+                        <span class="req">*</span></label
+                      >
+                      <input
+                        id="company_name"
+                        name="company_name"
+                        type="text"
+                        autocomplete="organization"
+                        required
+                      />
+                      <span class="error">Please enter your company name.</span>
+                    </div>
+
+                    <div class="field" data-role-only="employer" hidden>
+                      <label for="industry"
+                        >Industry <span class="req">*</span></label
+                      >
+                      <select id="industry" name="industry" required>
+                        <option value="">Select…</option>
+                        <option>BPO</option>
+                        <option>Manufacturing</option>
+                        <option>Retail and wholesale</option>
+                        <option>Construction</option>
+                        <option>Agriculture</option>
+                        <option>Tourism and hospitality</option>
+                        <option>Healthcare</option>
+                        <option>Transport and logistics</option>
+                        <option>IT and software</option>
+                        <option>Education</option>
+                        <option>Other</option>
+                      </select>
+                      <span class="error">Please select an industry.</span>
+                    </div>
+
+                    <div class="field" data-role-only="employer" hidden>
+                      <label for="position_title"
+                        >Your position <span class="req">*</span></label
+                      >
+                      <input
+                        id="position_title"
+                        name="position_title"
+                        type="text"
+                        placeholder="HR Officer, Owner, Recruiter"
+                        required
+                      />
+                      <span class="error">Please enter your position.</span>
+                    </div>
+
+                    <div class="field" data-role-only="employer" hidden>
+                      <label for="company_size">Company size</label>
+                      <select id="company_size" name="company_size">
+                        <option value="">Select…</option>
+                        <option>1-9</option>
+                        <option>10-49</option>
+                        <option>50-199</option>
+                        <option>200+</option>
+                      </select>
+                    </div>
+
+                    <div class="field" data-role-only="employer" hidden>
+                      <label for="business_permit_no"
+                        >Business permit / DTI / SEC no.
+                        <span class="req">*</span></label
+                      >
+                      <input
+                        id="business_permit_no"
+                        name="business_permit_no"
+                        type="text"
+                        required
+                      />
+                      <span class="hint"
+                        >Used by PESO to verify your establishment.</span
+                      >
+                      <span class="error"
+                        >Please enter your registration number.</span
+                      >
+                    </div>
+
+                    <div class="field" data-role-only="employer" hidden>
+                      <label for="hiring_count">Workers needed this year</label>
+                      <input
+                        id="hiring_count"
+                        name="hiring_count"
+                        type="number"
+                        min="0"
+                        max="9999"
+                        value="0"
+                      />
+                    </div>
+
+                    <div class="field full" data-role-only="employer" hidden>
+                      <label for="company_address"
+                        >Company address <span class="req">*</span></label
+                      >
+                      <textarea
+                        id="company_address"
+                        name="company_address"
+                        required
+                      ></textarea>
+                      <span class="error"
+                        >Please enter your company address.</span
+                      >
+                    </div>
+
+                    <div class="field full" data-role-only="employer" hidden>
+                      <label for="website">Website or Facebook page</label>
+                      <input
+                        id="website"
+                        name="website"
+                        type="url"
+                        placeholder="https://"
+                      />
+                      <span class="error"
+                        >Please enter a valid URL (start with https://).</span
+                      >
+                    </div>
+
+                    <div class="field full" data-role-only="employer" hidden>
+                      <label for="business_permit"
+                        >Upload business permit (optional)</label
+                      >
+                      <input
+                        id="business_permit"
+                        name="business_permit"
+                        type="file"
+                        accept=".pdf,.doc,.docx"
+                      />
+                      <span class="hint"
+                        >PDF, DOC or DOCX. Maximum 5 MB. Speeds up
+                        verification.</span
+                      >
+                    </div>
+
+                    <div class="field full" data-role-only="employer" hidden>
+                      <div class="ck">
+                        <input
+                          id="consent_em"
+                          name="consent"
+                          type="checkbox"
+                          value="1"
+                          required
+                        />
+                        <label for="consent_em"
+                          >I certify that this establishment is legitimate and
+                          agree to the processing of this data under the Data
+                          Privacy Act of 2012 (RA 10173).
+                          <span class="req">*</span></label
+                        >
+                      </div>
+                      <span class="error"
+                        >Please tick the box to continue.</span
+                      >
+                    </div>
+
+                    <!-- step 1 actions -->
+                    <div class="acts" data-role-only="jobseeker">
+                      <button type="button" class="btn btn-p" data-next>
+                        Continue
+                      </button>
+                    </div>
+                    <div class="acts" data-role-only="employer" hidden>
+                      <button type="submit" class="btn btn-p" id="emSubmit">
+                        Create employer account
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- ============ STEP 2 : jobseeker only ============ -->
+                <div class="wpanel" data-step="2" hidden>
+                  <h3>Skills and resume</h3>
+                  <p class="help">
+                    Employers search these details. You can update them later.
+                  </p>
+
+                  <div class="fg">
+                    <div class="field">
+                      <label for="highest_education"
+                        >Highest education <span class="req">*</span></label
+                      >
+                      <select
+                        id="highest_education"
+                        name="highest_education"
+                        required
+                      >
+                        <option value="">Select…</option>
+                        <option>Elementary</option>
+                        <option>High school graduate</option>
+                        <option>Senior high school</option>
+                        <option>Vocational / TESDA NC</option>
+                        <option>College graduate</option>
+                        <option>Postgraduate</option>
+                      </select>
+                      <span class="error"
+                        >Please select your highest education.</span
+                      >
+                    </div>
+
+                    <div class="field">
+                      <label for="course">Course or trade</label>
+                      <input
+                        id="course"
+                        name="course"
+                        type="text"
+                        placeholder="e.g. Welding NC II, BSIT"
+                      />
+                    </div>
+
+                    <div class="field full">
+                      <label for="skills"
+                        >Skills <span class="req">*</span></label
+                      >
+                      <textarea
+                        id="skills"
+                        name="skills"
+                        required
+                        placeholder="e.g. Customer service, MS Office, driving, encoding"
+                      ></textarea>
+                      <span class="hint"
+                        >Separate each skill with a comma.</span
+                      >
+                      <span class="error">Please list at least one skill.</span>
+                    </div>
+
+                    <div class="field">
+                      <label for="experience_years"
+                        >Years of work experience</label
+                      >
+                      <input
+                        id="experience_years"
+                        name="experience_years"
+                        type="number"
+                        min="0"
+                        max="60"
+                        value="0"
+                      />
+                    </div>
+
+                    <div class="field full">
+                      <label for="resume"
+                        >Resume <span class="req">*</span></label
+                      >
+                      <input
+                        id="resume"
+                        name="resume"
+                        type="file"
+                        accept=".pdf,.doc,.docx"
+                        required
+                      />
+                      <span class="hint" data-file-label="resume"
+                        >PDF, DOC or DOCX. Maximum 5 MB.</span
+                      >
+                      <span class="error">Please attach your resume.</span>
+                    </div>
+
+                    <div class="acts">
+                      <button type="button" class="btn btn-line" data-back>
+                        Back
+                      </button>
+                      <button type="button" class="btn btn-p" data-next>
+                        Continue
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- ============ STEP 3 : jobseeker only ============ -->
+                <div class="wpanel" data-step="3" hidden>
+                  <h3>Job preferences</h3>
+                  <p class="help">
+                    We use this to match you with verified vacancies near you.
+                  </p>
+
+                  <div class="fg">
+                    <div class="field">
+                      <label for="preferred_job_type"
+                        >Work arrangement <span class="req">*</span></label
+                      >
+                      <select
+                        id="preferred_job_type"
+                        name="preferred_job_type"
+                        required
+                      >
+                        <option value="">Select…</option>
+                        <option>Full-time</option>
+                        <option>Part-time</option>
+                        <option>Contractual</option>
+                        <option>Project-based</option>
+                        <option>Internship / OJT</option>
+                        <option>Freelance</option>
+                      </select>
+                      <span class="error"
+                        >Please select a work arrangement.</span
+                      >
+                    </div>
+
+                    <div class="field">
+                      <label for="preferred_location"
+                        >Preferred location <span class="req">*</span></label
+                      >
+                      <input
+                        id="preferred_location"
+                        name="preferred_location"
+                        type="text"
+                        required
+                      />
+                      <span class="error"
+                        >Please enter your preferred location.</span
+                      >
+                    </div>
+
+                    <div class="field">
+                      <label for="expected_salary"
+                        >Expected monthly pay (₱)</label
+                      >
+                      <input
+                        id="expected_salary"
+                        name="expected_salary"
+                        type="number"
+                        min="0"
+                        step="100"
+                        placeholder="e.g. 18000"
+                      />
+                    </div>
+
+                    <div class="field">
+                      <label for="availability"
+                        >Available to start <span class="req">*</span></label
+                      >
+                      <select id="availability" name="availability" required>
+                        <option value="">Select…</option>
+                        <option>Immediately</option>
+                        <option>Within 2 weeks</option>
+                        <option>Within 1 month</option>
+                        <option>More than a month</option>
+                      </select>
+                      <span class="error"
+                        >Please select your availability.</span
+                      >
+                    </div>
+
+                    <div class="field full">
+                      <div class="ck">
+                        <input
+                          id="consent_js"
+                          name="consent"
+                          type="checkbox"
+                          value="1"
+                          required
+                        />
+                        <label for="consent_js"
+                          >My profile and resume are accurate and I agree to
+                          share them with verified PESO employers, in line with
+                          the Data Privacy Act of 2012 (RA 10173).
+                          <span class="req">*</span></label
+                        >
+                      </div>
+                      <span class="error"
+                        >Please tick the box to continue.</span
+                      >
+                    </div>
+
+                    <div class="acts">
+                      <button type="button" class="btn btn-line" data-back>
+                        Back
+                      </button>
+                      <button type="submit" class="btn btn-p" id="jsSubmit">
+                        Create jobseeker account
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </form>
+            </div>
+
+            <p class="note">
+              Employer accounts are reviewed by PESO before vacancies go live.
+              Jobseeker accounts are activated immediately.
+            </p>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <!-- Shared app bar: role-aware, visible only after login -->
+    <header class="appbar" id="appbar" hidden>
+      <div class="container">
+        <a
+          class="brand"
+          href="#"
+          id="appHome"
+          aria-label="PESO Online, back to top"
+          ><span class="mark" aria-hidden="true">PESO</span
+          ><span
+            ><strong>PESO Online</strong
+            ><small id="appSub">Member area</small></span
+          ></a
+        >
+        <nav class="tools" aria-label="Account">
+          <span class="pill" id="rolePill"></span>
+          <button
+            class="btn btn-glass themeBtn"
+            type="button"
+            aria-label="Dark mode"
+          >
+            ◐<span class="lbl"> Dark mode</span>
+          </button>
+          <button
+            class="btn btn-glass bell"
+            id="bell"
+            type="button"
+            aria-expanded="false"
+            aria-controls="pop"
+            aria-label="Notifications"
+            hidden
+          >
+            🔔<span class="badge" id="badge" hidden>0</span>
+          </button>
+          <div class="me">
+            <span class="av" id="av" aria-hidden="true">P</span>
+            <div><small>Signed in as</small><b id="meName"></b></div>
+          </div>
+          <button class="btn btn-gold" id="logout" type="button">
+            Log out
+          </button>
+        </nav>
+        <section class="pop" id="pop" aria-labelledby="popT" hidden>
+          <h2 id="popT">
+            Notifications
+            <button class="link" id="readAll" type="button">
+              Mark all read
+            </button>
+          </h2>
+          <ul id="nl"></ul>
+        </section>
+      </div>
+    </header>
+
+    <!-- ===== Jobseeker dashboard ===== -->
+    <div id="jsView" hidden>
+      <section class="banner" aria-labelledby="jsHi">
+        <div class="container bgrid">
+          <div>
+            <h1 id="jsHi"></h1>
+            <p class="sub">
+              Browse current job offers and apply in a few taps. All PESO
+              services are 100% free.
+            </p>
+            <div class="stats" role="list" aria-label="Quick stats">
+              <div role="listitem">
+                <b id="sSaved">0</b><span>Saved jobs</span>
+              </div>
+              <div role="listitem">
+                <b id="sApps">1</b><span>Active applications</span>
+              </div>
+              <div role="listitem">
+                <b id="sInt">0</b><span>Interviews</span>
+              </div>
+            </div>
+          </div>
+          <aside class="track" aria-labelledby="trT">
+            <h2 id="trT">Application tracking</h2>
+            <p class="tid" id="jsId"></p>
+            <div id="tkBox" aria-live="polite"></div>
+          </aside>
+        </div>
+      </section>
+      <main class="container" id="jsMain" tabindex="-1">
+        <div class="jh">
+          <h2>Job offers</h2>
+          <p>
+            Verified vacancies from employers in your area. All sample listings;
+            pay is in Philippine pesos (₱).
+          </p>
+        </div>
+        <div class="jbar" role="search">
+          <div class="field">
+            <label for="q">Search jobs</label
+            ><input
+              id="q"
+              type="search"
+              placeholder="Job title, company or skill"
+            />
+          </div>
+          <div class="field">
+            <label for="jsLoc">Location</label
+            ><select id="jsLoc"></select>
+          </div>
+        </div>
+        <div
+          class="fchips"
+          role="group"
+          aria-label="Filter by category"
+          id="chips"
+        ></div>
+        <p class="count" id="cnt" role="status" aria-live="polite"></p>
+        <div class="jgrid" id="grid"></div>
+      </main>
+    </div>
+
+    <!-- ===== Employer command center ===== -->
+    <div id="emView" hidden>
+      <main class="container" id="emMain" tabindex="-1">
+        <div class="hd">
+          <div>
+            <h1 id="emHi">Recruiter command center</h1>
+            <p>
+              Manage vacancies, applicants and hiring support. Listings are
+              verified by PESO under DOLE supervision.
+            </p>
+          </div>
+          <button class="btn btn-gold" type="button" id="newJob">
+            + Post a new vacancy
+          </button>
+        </div>
+        <div class="estats" role="list" aria-label="Summary">
+          <div class="stat" role="listitem">
+            <b id="s1">0</b><span>Active postings</span>
+          </div>
+          <div class="stat" role="listitem">
+            <b id="s2">0</b><span>Pending approval</span>
+          </div>
+          <div class="stat" role="listitem">
+            <b id="s3">0</b><span>Total applicants</span>
+          </div>
+          <div class="stat" role="listitem">
+            <b id="s4">0</b><span>Interviews scheduled</span>
+          </div>
+        </div>
+        <div
+          class="tabs mtabs"
+          role="tablist"
+          aria-label="Employer sections"
+          id="mt"
+        >
+          <button
+            type="button"
+            role="tab"
+            id="mt-p"
+            aria-controls="v-p"
+            aria-selected="true"
+            data-v="p"
+          >
+            Job postings</button
+          ><button
+            type="button"
+            role="tab"
+            id="mt-a"
+            aria-controls="v-a"
+            aria-selected="false"
+            data-v="a"
+            tabindex="-1"
+          >
+            Applicants</button
+          ><button
+            type="button"
+            role="tab"
+            id="mt-h"
+            aria-controls="v-h"
+            aria-selected="false"
+            data-v="h"
+            tabindex="-1"
+          >
+            Hiring assistance
+          </button>
+        </div>
+        <section class="view" id="v-p" role="tabpanel" aria-labelledby="mt-p">
+          <div class="card">
+            <h2>Your job postings</h2>
+            <div class="tw">
+              <table>
+                <caption class="sr">
+                  Job postings
+                </caption>
+                <thead>
+                  <tr>
+                    <th scope="col">Position</th>
+                    <th scope="col">Location</th>
+                    <th scope="col">Pay</th>
+                    <th scope="col">Slots</th>
+                    <th scope="col">Applicants</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">Action</th>
+                  </tr>
+                </thead>
+                <tbody id="jb"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+        <section
+          class="view"
+          id="v-a"
+          role="tabpanel"
+          aria-labelledby="mt-a"
+          hidden
+        >
+          <div class="card">
+            <h2>Applicants</h2>
+            <div class="fbar">
+              <div class="field">
+                <label for="fp">Posting</label
+                ><select id="fp"></select>
+              </div>
+              <div class="field">
+                <label for="fs">Status</label
+                ><select id="fs">
+                  <option value="">All statuses</option>
+                  <option>New</option>
+                  <option>Shortlisted</option>
+                  <option>Interview</option>
+                  <option>Rejected</option>
+                </select>
+              </div>
+            </div>
+            <p
+              class="hint"
+              id="ac"
+              role="status"
+              aria-live="polite"
+              style="margin-bottom: 8px"
+            ></p>
+            <div class="tw">
+              <table>
+                <caption class="sr">
+                  Applicants
+                </caption>
+                <thead>
+                  <tr>
+                    <th scope="col">Applicant</th>
+                    <th scope="col">Applied for</th>
+                    <th scope="col">Resume</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="ab"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+        <section
+          class="view"
+          id="v-h"
+          role="tabpanel"
+          aria-labelledby="mt-h"
+          hidden
+        >
+          <div class="card">
+            <h2>Upcoming PESO events</h2>
+            <div class="egrid">
+              <div class="efair">
+                <time datetime="2026-11-14">Sat, Nov 14, 2026</time>
+                <h3>Mega Job Fair</h3>
+                <p>
+                  Booths for verified employers. On-the-spot interviews. Sample
+                  listing.
+                </p>
+                <button
+                  class="btn btn-p sm"
+                  type="button"
+                  data-pre="Mega Job Fair participation"
+                >
+                  Reserve a booth
+                </button>
+              </div>
+              <div class="efair">
+                <time datetime="2027-01-16">Sat, Jan 16, 2027</time>
+                <h3>Youth and Special Placements Fair</h3>
+                <p>
+                  Inclusive hiring for students, persons with disabilities and
+                  returning workers.
+                </p>
+                <button
+                  class="btn btn-p sm"
+                  type="button"
+                  data-pre="Mega Job Fair participation"
+                >
+                  Join this fair
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <h2>Request recruitment assistance</h2>
+            <p class="help">
+              A PESO officer will respond within three working days. This
+              service is free.
+            </p>
+            <div class="alert" role="alert"></div>
+            <form class="fg" id="fH" novalidate></form>
+          </div>
+          <div class="card">
+            <h2>Your requests</h2>
+            <div class="tw">
+              <table>
+                <caption class="sr">
+                  Your requests
+                </caption>
+                <thead>
+                  <tr>
+                    <th scope="col">Reference</th>
+                    <th scope="col">Type</th>
+                    <th scope="col">Headcount</th>
+                    <th scope="col">Status</th>
+                  </tr>
+                </thead>
+                <tbody id="rb"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <footer>
+      <div class="container">
+        <div>
+          <strong>Public Employment Service Office</strong>Free employment
+          assistance for jobseekers and employers, supervised by the Department
+          of Labor and Employment (DOLE).
+        </div>
+        <div>
+          <strong>Office hours</strong>Monday to Friday, 8:00 AM to 5:00 PM
+        </div>
+        <p class="legal">
+          Personal data is processed under the Data Privacy Act of 2012 (RA
+          10173). Demonstration website; content and figures are illustrative. ©
+          2026 PESO.
+        </p>
+      </div>
+    </footer>
+
+    <dialog id="loginDlg">
+      <div class="dlg">
+        <button class="x" type="button" data-close aria-label="Close">×</button>
+        <h2>Log in</h2>
+
+        <div class="tabs" role="tablist" aria-label="Login type">
+          <button
+            type="button"
+            role="tab"
+            aria-selected="true"
+            data-login-role="jobseeker"
+          >
+            Jobseeker
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected="false"
+            data-login-role="employer"
+          >
+            Employer
+          </button>
+        </div>
+
+        <form action="login.php" method="post">
+          <input
+            type="hidden"
+            name="login_role"
+            id="loginRole"
+            value="jobseeker"
+          />
+
+          <div class="field">
+            <label for="loginEmail">Email address</label>
+            <input
+              id="loginEmail"
+              name="email"
+              type="email"
+              autocomplete="email"
+              required
+            />
+          </div>
+
+          <div class="field">
+            <label for="loginPassword">Password</label>
+            <div class="pw">
+              <input
+                id="loginPassword"
+                name="password"
+                type="password"
+                autocomplete="current-password"
+                required
+              />
+              <button type="button" data-toggle-pw="loginPassword">Show</button>
+            </div>
+          </div>
+
+          <div class="acts">
+            <button type="submit" class="btn btn-p">Log in</button>
+          </div>
+        </form>
+
+        <p class="alt2">
+          No account yet? <a href="#join" data-close>Create one</a>
+        </p>
+      </div>
+    </dialog>
+
+    <dialog id="applyDlg" aria-labelledby="adT">
+      <form class="dlg" id="af" novalidate method="dialog">
+        <button class="x" type="button" id="dx" aria-label="Close">×</button>
+        <h2 id="adT">Confirm your application</h2>
+        <p class="cname">Review the details, check your resume and submit.</p>
+        <div class="sum">
+          <b id="dJob"></b>
+          <div class="cname" id="dMeta"></div>
+        </div>
+        <p><b>Resume</b></p>
+        <div class="resume" id="rs">
+          <span id="rn"></span
+          ><label
+            class="btn btn-line"
+            style="min-height: 38px; padding: 6px 14px"
+            for="rf"
+            >Replace</label
+          ><input
+            class="sr"
+            type="file"
+            id="rf"
+            accept=".pdf,.doc,.docx"
+            aria-describedby="re"
+          />
+        </div>
+        <p class="err" id="re" role="alert"></p>
+        <div class="ck">
+          <input type="checkbox" id="ok" required aria-describedby="ce" /><label
+            for="ok"
+            >I confirm my profile and resume are accurate and I agree to share
+            them with this employer, in line with the Data Privacy Act.</label
+          >
+        </div>
+        <p class="err" id="ce" role="alert"></p>
+        <div class="acts">
+          <button class="btn btn-line" type="button" id="dc">Cancel</button
+          ><button class="btn btn-gold" type="submit">
+            Submit application
+          </button>
+        </div>
+      </form>
+    </dialog>
+    <dialog id="dJ" aria-labelledby="djT">
+      <form class="dlg" id="fJ" novalidate method="dialog">
+        <button class="x" type="button" data-x aria-label="Close">×</button>
+        <h2 id="djT">Post a new vacancy</h2>
+        <p class="help">
+          New postings are reviewed by PESO before they go live.
+        </p>
+        <div class="alert" role="alert"></div>
+        <div class="fg" id="fJf"></div>
+      </form>
+    </dialog>
+    <dialog id="dI" aria-labelledby="diT">
+      <form class="dlg" id="fI" novalidate method="dialog">
+        <button class="x" type="button" data-x aria-label="Close">×</button>
+        <h2 id="diT">Schedule interview</h2>
+        <p class="help" id="diW"></p>
+        <div class="alert" role="alert"></div>
+        <div class="fg" id="fIf"></div>
+      </form>
+    </dialog>
+    <script src="js/auth.js" defer></script>
+    <script src="js/script.js" defer></script>
+  </body>
+</html>
