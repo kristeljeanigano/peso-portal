@@ -193,20 +193,10 @@
     setRole(preset === "employer" ? "employer" : "jobseeker");
   }
 
-  /* ---------- login dialog tabs ---------- */
-  // Role is now auto-detected from the database in login.php.
-  // The tabs have been removed from the login dialog for a seamless experience.
-
   /* ---------- password reveal ---------- */
-  document.querySelectorAll("[data-toggle-pw]").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const input = document.getElementById(btn.dataset.togglePw);
-      if (!input) return;
-      const show = input.type === "password";
-      input.type = show ? "text" : "password";
-      btn.textContent = show ? "Hide" : "Show";
-    });
-  });
+  // REMOVED: This logic was duplicated in script.js.
+  // Having both caused them to fire sequentially and cancel each other out.
+  // script.js already handles all ".pw button" clicks globally.
 
   /* ---------- file name preview ---------- */
   document.querySelectorAll('input[type="file"]').forEach((input) => {
