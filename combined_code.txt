@@ -1,0 +1,5102 @@
+=== FILE: ./js/script.js ===
+(() => {
+  "use strict";
+  const $ = (s, c = document) => c.querySelector(s),
+    $$ = (s, c = document) => [...c.querySelectorAll(s)];
+  const esc = (s) =>
+    String(s).replace(
+      /[&<>"']/g,
+      (c) =>
+        ({
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          '"': "&quot;",
+          "'": "&#39;",
+        })[c],
+    );
+  const reduced = matchMedia("(prefers-reduced-motion:reduce)").matches;
+  const rid = (p) =>
+    "#PESO-" + p + "2026-" + (1000 + Math.floor(Math.random() * 9000));
+  let user = null,
+    timers = [],
+    wiz = 1,
+    wdata = {};
+
+  function toast(m, t = "ok") {
+    const e = document.createElement("div");
+    e.className = "toast " + t;
+    e.innerHTML =
+      "<span>" +
+      esc(m) +
+      '</span><button type="button" aria-label="Dismiss notification">×</button>';
+    $("#toasts").append(e);
+    let h;
+    const k = () => {
+        e.classList.add("out");
+        setTimeout(() => e.remove(), 260);
+      },
+      a = () => {
+        h = setTimeout(k, 5000);
+      };
+    a();
+    e.onmouseenter = () => clearTimeout(h);
+    e.onmouseleave = a;
+    $("button", e).onclick = k;
+  }
+
+  function theme(t) {
+    document.documentElement.dataset.theme = t;
+    try {
+      localStorage.setItem("peso-theme", t);
+    } catch (e) {}
+    $$(".themeBtn").forEach((b) => {
+      const d = t === "dark",
+        l = $(".lbl", b);
+      if (l) {
+        l.textContent = d ? " Light mode" : " Dark mode";
+        b.setAttribute("aria-label", d ? "Light mode" : "Dark mode");
+      } else b.textContent = d ? "Light mode" : "Dark mode";
+    });
+  }
+  let sv;
+  try {
+    sv = localStorage.getItem("peso-theme");
+  } catch (e) {}
+  theme(
+    sv ||
+      (matchMedia("(prefers-color-scheme:dark)").matches ? "dark" : "light"),
+  );
+  document.addEventListener("click", (e) => {
+    if (e.target.closest(".themeBtn"))
+      theme(
+        document.documentElement.dataset.theme === "dark" ? "light" : "dark",
+      );
+  });
+
+  const F = (o) => {
+    const rq = o.r === false ? "" : " required",
+      d = (o.h ? o.id + "-h " : "") + o.id + "-err";
+    let c;
+    if (o.cb)
+      return `<div class="field full"><div class="ck"><input type="checkbox" id="${o.id}" name="${o.id}"${rq} aria-describedby="${d}"><label for="${o.id}">${o.l}</label></div><span class="error" id="${o.id}-err"></span></div>`;
+    if (o.opts)
+      c = `<select id="${o.id}" name="${o.id}"${rq} aria-describedby="${d}"><option value="">Select an option</option>${o.opts.map((x) => `<option>${x}</option>`).join("")}</select>`;
+    else if (o.ta)
+      c = `<textarea id="${o.id}" name="${o.id}"${rq} ${o.a || ""} aria-describedby="${d}"></textarea>`;
+    else {
+      c = `<input id="${o.id}" name="${o.id}" type="${o.t || "text"}"${rq} ${o.a || ""} aria-describedby="${d}">`;
+      if (o.t === "password")
+        c = `<div class="pw">${c}<button type="button" aria-pressed="false" aria-label="Show password">Show</button></div>`;
+    }
+    return `<div class="field${o.full ? " full" : ""}"><label for="${o.id}">${o.l}${o.r === false ? "" : ' <span class="req" aria-hidden="true">*</span>'}</label>${c}${o.h ? `<span class="hint" id="${o.id}-h">${o.h}</span>` : ""}<span class="error" id="${o.id}-err"></span></div>`;
+  };
+  document.addEventListener("click", (e) => {
+    const b = e.target.closest(".pw button");
+    if (!b) return;
+    const i = $("input", b.parentNode),
+      s = i.type === "password";
+    i.type = s ? "text" : "password";
+    b.textContent = s ? "Hide" : "Show";
+    b.setAttribute("aria-pressed", s);
+    b.setAttribute("aria-label", s ? "Hide password" : "Show password");
+  });
+  const MOB =
+      'pattern="^(\\+63|0)9\\d{9}$" inputmode="tel" autocomplete="tel" placeholder="09123456789"',
+    PW = 'minlength="8" autocomplete="new-password"';
+  const EDU = [
+    "High school graduate",
+    "Vocational diploma",
+    "College undergraduate",
+    "College graduate",
+  ];
+  const PROG = [
+    "Technical and mechanical skills",
+    "Customer service and BPO training",
+    "Digital literacy and IT basics",
+  ];
+  const CAT = [
+    "Technical and Trades",
+    "Customer Service and BPO",
+    "IT and Digital",
+    "Administrative",
+    "Healthcare",
+    "Hospitality and Retail",
+  ];
+  const LOC = ["Local municipality", "Provincial district"],
+    TYP = ["Full-time", "Part-time", "Contractual"];
+  const SUB = '<div class="acts"><button class="btn btn-p" type="submit">';
+
+  function msg(el) {
+    const l = (el.labels[0] ? el.labels[0].textContent : "this field")
+        .replace("*", "")
+        .trim()
+        .toLowerCase(),
+      v = el.validity;
+    if (v.valueMissing)
+      return el.type === "file"
+        ? "Attach your resume to continue."
+        : el.type === "checkbox"
+          ? "Accept the data privacy consent to continue."
+          : el.tagName === "SELECT"
+            ? "Select " + l + "."
+            : "Enter " + l + ".";
+    if (v.typeMismatch)
+      return "Enter a valid email address, such as name@example.com.";
+    if (v.patternMismatch)
+      return el.id === "vpay"
+        ? "Enter pay in pesos, such as ₱18,000–22,000/mo."
+        : "Use a valid mobile number, such as 09123456789.";
+    if (v.tooShort) return "Enter at least " + el.minLength + " characters.";
+    if (v.rangeUnderflow)
+      return el.type === "date"
+        ? "Choose today or a later date."
+        : "Enter " + el.min + " or more.";
+    if (v.rangeOverflow) return "Enter " + el.max + " or less.";
+    return "Check this entry.";
+  }
+  function vf(el) {
+    let m = "";
+    if (!el.checkValidity()) m = msg(el);
+    else if (el.type === "file" && el.files[0]) {
+      const f = el.files[0];
+      if (!/\.(pdf|docx?)$/i.test(f.name)) m = "Upload a PDF or Word file.";
+      else if (f.size > 5242880)
+        m = "File is larger than 5 MB. Upload a smaller file.";
+    }
+    el.closest(".field").classList.toggle("bad", !!m);
+    el.setAttribute("aria-invalid", !!m);
+    const er = $("#" + el.id + "-err");
+    if (er) er.textContent = m;
+    return !m;
+  }
+  function vForm(f) {
+    const bad = $$("input,select,textarea", f).filter((x) => !vf(x)),
+      al = $(".alert", f.closest(".wpanel,.fp,.dlg,.card") || document);
+    if (al) {
+      al.textContent = bad.length
+        ? "Please correct " +
+          bad.length +
+          (bad.length > 1 ? " fields" : " field") +
+          " before continuing."
+        : "";
+      al.classList.toggle("show", !!bad.length);
+    }
+    if (bad.length) {
+      bad[0].focus();
+      return false;
+    }
+    return true;
+  }
+  function live(f) {
+    $$("input,select,textarea", f).forEach((x) => {
+      x.addEventListener("blur", () => {
+        if (x.value || x.closest(".field").classList.contains("bad")) vf(x);
+      });
+      ["input", "change"].forEach((v) =>
+        x.addEventListener(v, () => {
+          if (x.closest(".field").classList.contains("bad")) vf(x);
+        }),
+      );
+    });
+  }
+
+  const tg = $("#navToggle"),
+    lk = $("#navLinks"),
+    sc = $("#scrim");
+  function drawer(o) {
+    lk.classList.toggle("open", o);
+    sc.classList.toggle("on", o);
+    tg.setAttribute("aria-expanded", o);
+    tg.setAttribute("aria-label", o ? "Close menu" : "Open menu");
+    if (o) $("a,button", lk).focus();
+  }
+  tg.onclick = () => drawer(!lk.classList.contains("open"));
+  sc.onclick = () => {
+    drawer(false);
+    tg.focus();
+  };
+  lk.addEventListener("click", (e) => {
+    if (e.target.closest("a,button")) drawer(false);
+  });
+  document.addEventListener("keydown", (e) => {
+    if (!lk.classList.contains("open")) return;
+    if (e.key === "Escape") {
+      drawer(false);
+      tg.focus();
+    }
+    if (e.key === "Tab") {
+      const f = [tg, ...$$("a,button", lk)],
+        i = f.indexOf(document.activeElement);
+      if (e.shiftKey && i <= 0) {
+        e.preventDefault();
+        f[f.length - 1].focus();
+      } else if (!e.shiftKey && i === f.length - 1) {
+        e.preventDefault();
+        f[0].focus();
+      }
+    }
+  });
+  matchMedia("(min-width:901px)").addEventListener("change", () =>
+    drawer(false),
+  );
+  $("#noticeX").onclick = () => $("#notice").remove();
+
+  let rays = "";
+  for (let i = 0; i < 24; i++) {
+    const big = i % 3 === 0;
+    rays += `<line x1="0" y1="-84" x2="0" y2="${big ? -190 : -140}" transform="rotate(${i * 15})" stroke-width="${big ? 3 : 1.5}"/>`;
+  }
+  $("#sun").insertAdjacentHTML("beforeend", rays);
+  $$("[data-count]").forEach((el) => {
+    const to = +el.dataset.count,
+      t0 = performance.now(),
+      f = (n) => {
+        const p = Math.min((n - t0) / 1500, 1);
+        el.textContent = Math.round(
+          to * (1 - Math.pow(1 - p, 3)),
+        ).toLocaleString("en-PH");
+        if (p < 1) requestAnimationFrame(f);
+      };
+    reduced
+      ? (el.textContent = to.toLocaleString("en-PH"))
+      : requestAnimationFrame(f);
+  });
+  let vac = 1248;
+  setInterval(() => {
+    if (document.hidden || $("#landing").hidden) return;
+    vac += 1 + Math.floor(Math.random() * 3);
+    $("#cVac").textContent = vac.toLocaleString("en-PH");
+    $("#upd").textContent =
+      "Sample figures. Last tick: " +
+      new Date().toLocaleTimeString("en-PH", {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+      });
+  }, 7000);
+  const SK = [
+    ["Customer support (voice and chat)", "+22%"],
+    ["Data entry and virtual assistance", "+18%"],
+    ["Welding and fabrication", "+15%"],
+    ["Electrical maintenance", "+12%"],
+    ["Digital marketing basics", "+17%"],
+    ["Caregiving and nursing aide", "+14%"],
+    ["Web development", "+19%"],
+    ["Food service and hospitality", "+9%"],
+  ];
+  const tl = `<ul>${SK.map((s) => `<li>${s[0]}<b>${s[1]}</b></li>`).join("")}</ul>`;
+  $("#tkIn").innerHTML = tl + tl.replace("<ul>", '<ul aria-hidden="true">');
+  $("#tkBtn").onclick = (e) => {
+    const p = $("#tk").classList.toggle("paused");
+    e.target.textContent = p ? "Play" : "Pause";
+    e.target.setAttribute("aria-pressed", p);
+  };
+
+  function setJoin(role, focus) {
+    const j = role === "jobseeker";
+    $("#tabJ").setAttribute("aria-selected", j);
+    $("#tabE").setAttribute("aria-selected", !j);
+    $("#tabJ").tabIndex = j ? 0 : -1;
+    $("#tabE").tabIndex = j ? -1 : 0;
+    $("#pJ").hidden = !j;
+    $("#pE").hidden = j;
+    if (focus) $("#tab" + (j ? "J" : "E")).focus();
+  }
+  $$("[data-role]").forEach((b) => {
+    b.onclick = () => setJoin(b.dataset.role);
+    b.onkeydown = (e) => {
+      if (/Arrow(Left|Right)/.test(e.key))
+        setJoin(
+          b.dataset.role === "jobseeker" ? "employer" : "jobseeker",
+          true,
+        );
+    };
+  });
+  $$("[data-join]").forEach((a) =>
+    a.addEventListener("click", () => setJoin(a.dataset.join)),
+  );
+
+  const WP = [
+    `<h3>Create your account</h3><p class="help">Tell us who you are so we can match you with work.</p><div class="alert" role="alert"></div><form class="fg" novalidate data-s="1">${F({ id: "fullName", l: "Full name", full: 1, a: 'autocomplete="name" minlength="3" placeholder="e.g. Juan Dela Cruz"' })}${F({ id: "email", l: "Email address", t: "email", a: 'autocomplete="email" placeholder="name@example.com"' })}${F({ id: "mobile", l: "Mobile number", t: "tel", a: MOB, h: "09123456789 or +639123456789" })}${F({ id: "pw", l: "Password", t: "password", a: PW, h: "At least 8 characters" })}${F({ id: "edu", l: "Highest educational attainment", opts: EDU })}${SUB}Save and continue</button></div></form>`,
+    `<h3>Skills and resume</h3><p class="help">Pick a training track and attach your latest resume.</p><div class="alert" role="alert"></div><form class="fg" novalidate data-s="2">${F({ id: "prog", l: "Training program", full: 1, opts: PROG })}${F({ id: "resume", l: "Resume", full: 1, t: "file", a: 'accept=".pdf,.doc,.docx"', h: "PDF or Word file, maximum 5 MB" })}<div class="acts"><button class="btn btn-line" type="button" data-back="1">Back</button><button class="btn btn-p" type="submit">Save and continue</button></div></form>`,
+    `<h3>Job preferences</h3><p class="help">Tell us the work you want and where you can report.</p><div class="alert" role="alert"></div><form class="fg" novalidate data-s="3">${F({ id: "role", l: "Preferred job field or title", a: 'minlength="2" placeholder="e.g. Administrative assistant"' })}${F({ id: "loc", l: "Preferred work location", opts: LOC })}${F({ id: "consent", cb: 1, l: "I agree that PESO may process my details to match me with employers, in line with the Data Privacy Act." })}<div class="acts"><button class="btn btn-line" type="button" data-back="2">Back</button><button class="btn btn-gold" type="submit">Submit application</button></div></form>`,
+  ];
+  $("#wbody").innerHTML = WP.map(
+    (h, i) =>
+      `<section class="wpanel" data-step="${i + 1}" aria-label="Step ${i + 1} of 3"${i ? " hidden" : ""}>${h}</section>`,
+  ).join("");
+  function go(n) {
+    const d = n >= wiz ? "next" : "prev";
+    wiz = n;
+    $$(".wpanel").forEach((p) => {
+      const on = +p.dataset.step === n;
+      p.hidden = !on;
+      p.classList.remove("next", "prev");
+      if (on) {
+        void p.offsetWidth;
+        if (!reduced) p.classList.add(d);
+      }
+    });
+    $("#wbar").style.width = (n / 3) * 100 + "%";
+    $("#wprog").setAttribute("aria-valuenow", n);
+    $("#wprog").setAttribute("aria-valuetext", "Step " + n + " of 3");
+    $$("#wsteps li").forEach((li, i) => {
+      li.className = i + 1 === n ? "on" : i + 1 < n ? "done" : "";
+      $("i", li).textContent = i + 1 < n ? "✓" : i + 1;
+      i + 1 === n
+        ? li.setAttribute("aria-current", "step")
+        : li.removeAttribute("aria-current");
+    });
+    const f = $(".wpanel:not([hidden]) input,.wpanel:not([hidden]) select");
+    if (f) f.focus({ preventScroll: true });
+  }
+  $$("#wbody form").forEach((f) => {
+    live(f);
+    f.addEventListener("submit", (e) => {
+      e.preventDefault();
+      if (!vForm(f)) return;
+      $$("input:not([type=file]):not([type=password]),select", f).forEach(
+        (x) => (wdata[x.name] = x.value.trim()),
+      );
+      const n = +f.dataset.s;
+      if (n < 3) {
+        toast("Step " + n + " saved.");
+        go(n + 1);
+        return;
+      }
+      const id = rid("");
+      wdata.id = id;
+      $("#wizard").hidden = true;
+      $("#confirm").hidden = false;
+      $("#cId").textContent = id;
+      $("#cName").textContent = wdata.fullName;
+      $("#cMail").textContent = wdata.email;
+      $("#cTl").innerHTML = timeline(0);
+      toast("Application submitted. Your tracking ID is " + id + ".");
+      $("#cId").scrollIntoView({
+        block: "center",
+        behavior: reduced ? "auto" : "smooth",
+      });
+      $("#cGo").focus({ preventScroll: true });
+    });
+  });
+  $$("[data-back]").forEach((b) => (b.onclick = () => go(+b.dataset.back)));
+  $("#cCopy").onclick = () => {
+    const t = $("#cId").textContent;
+    (navigator.clipboard
+      ? navigator.clipboard.writeText(t)
+      : Promise.reject()
+    ).then(
+      () => toast("Tracking ID copied."),
+      () => toast("Copy failed. Select the ID and copy it manually.", "err"),
+    );
+  };
+  $("#cGo").onclick = () =>
+    enter({
+      role: "jobseeker",
+      name: wdata.fullName,
+      email: wdata.email,
+      id: wdata.id,
+      prog: wdata.prog,
+      pref: wdata.role,
+      resume: ($("#resume").files[0] || {}).name,
+      stage: 0,
+    });
+
+  $("#empForm").innerHTML =
+    F({ id: "co", l: "Company name", a: 'autocomplete="organization"' }) +
+    F({ id: "cp", l: "Contact person", a: 'autocomplete="name"' }) +
+    F({
+      id: "eEmail",
+      l: "Work email",
+      t: "email",
+      a: 'autocomplete="email"',
+    }) +
+    F({ id: "eMob", l: "Mobile number", t: "tel", a: MOB }) +
+    F({ id: "ind", l: "Industry", opts: CAT }) +
+    F({
+      id: "need",
+      l: "What do you need first?",
+      opts: ["Post vacancies", "Request recruitment assistance"],
+    }) +
+    F({
+      id: "ePw",
+      l: "Password",
+      t: "password",
+      a: PW,
+      h: "At least 8 characters",
+      full: 1,
+    }) +
+    F({
+      id: "eCons",
+      cb: 1,
+      l: "I confirm my business is registered and agree to PESO verification.",
+    }) +
+    SUB +
+    "Create employer account</button></div>";
+  live($("#empForm"));
+  $("#empForm").addEventListener("submit", (e) => {
+    e.preventDefault();
+    if (!vForm(e.target)) return;
+    enter({
+      role: "employer",
+      name: $("#cp").value.trim(),
+      email: $("#eEmail").value.trim(),
+      co: $("#co").value.trim(),
+      tab: $("#need").value === "Post vacancies" ? "post" : "assist",
+    });
+  });
+
+  const dlg = $("#dlg");
+  let lrole = "jobseeker";
+  $("#loginForm").innerHTML =
+    F({
+      id: "lEmail",
+      l: "Email address",
+      t: "email",
+      a: 'autocomplete="email"',
+    }) +
+    F({
+      id: "lPw",
+      l: "Password",
+      t: "password",
+      a: 'minlength="8" autocomplete="current-password"',
+    }) +
+    '<div class="alert" role="alert"></div><button class="btn btn-p" type="submit">Log in</button>';
+  live($("#loginForm"));
+  function openLogin(r) {
+    lrole = r;
+    $$("[data-r]", dlg).forEach((b) =>
+      b.setAttribute("aria-pressed", b.dataset.r === r),
+    );
+    dlg.showModal();
+  }
+  $$("[data-login]").forEach(
+    (b) => (b.onclick = () => openLogin(b.dataset.login)),
+  );
+  $$("[data-r]", dlg).forEach(
+    (b) =>
+      (b.onclick = () => {
+        lrole = b.dataset.r;
+        $$("[data-r]", dlg).forEach((x) =>
+          x.setAttribute("aria-pressed", x === b),
+        );
+      }),
+  );
+  $("#dX").onclick = () => dlg.close();
+  dlg.addEventListener("click", (e) => {
+    if (e.target === dlg) dlg.close();
+  });
+  $("#dJoin").onclick = () => {
+    dlg.close();
+    setJoin(lrole);
+  };
+  $("#loginForm").addEventListener("submit", (e) => {
+    e.preventDefault();
+    if (!vForm(e.target)) return;
+    const m = $("#lEmail").value.trim(),
+      n = m
+        .split("@")[0]
+        .replace(/[._-]+/g, " ")
+        .replace(/\b\w/g, (c) => c.toUpperCase());
+    dlg.close();
+    e.target.reset();
+    enter({
+      role: lrole,
+      name: n,
+      email: m,
+      co: lrole === "employer" ? companyFrom(m) : "",
+      id: rid(""),
+      stage: 0,
+    });
+  });
+
+  const STG = [
+    ["Submitted", "PESO has received your application."],
+    ["Under review", "A PESO officer is checking your profile."],
+    ["Interview scheduled", "Expect a text message with the date and venue."],
+  ];
+  function timeline(s) {
+    return `<ol class="timeline">${STG.map((x, i) => `<li class="${i < s ? "done" : i === s ? "cur" : ""}"${i === s ? ' aria-current="step"' : ""}><b>${x[0]}</b><span>${x[1]}</span></li>`).join("")}</ol>`;
+  }
+  /* ====================================================================
+   UNIFIED APP: session, view controller, jobseeker dashboard, employer center
+   Session lives in localStorage ('peso-session'); theme in 'peso-theme'.
+   ==================================================================== */
+  const J = [
+    [
+      "Production Machine Operator",
+      "Northgate Manufacturing",
+      "Local municipality",
+      "₱18,000–22,000/mo",
+      ["Full-Time"],
+      "Operate and monitor line machinery.",
+      [
+        "Vocational diploma preferred",
+        "Shift work",
+        "Safety training provided",
+      ],
+    ],
+    [
+      "Customer Support Representative",
+      "BrightLine Contact Solutions",
+      "Local municipality",
+      "₱20,000–25,000/mo",
+      ["Full-Time"],
+      "Handle inbound customer calls and chats.",
+      [
+        "Clear English communication",
+        "Night shift allowance",
+        "Training provided",
+      ],
+    ],
+    [
+      "Chat Support Associate",
+      "Orbit CX",
+      "Remote",
+      "₱19,000–23,000/mo",
+      ["Full-Time", "Remote"],
+      "Support customers by chat from home.",
+      ["Own laptop and stable internet", "Customer service experience a plus"],
+    ],
+    [
+      "Junior Web Developer",
+      "Kawayan Digital Studio",
+      "Remote",
+      "₱28,000–38,000/mo",
+      ["Full-Time", "Remote"],
+      "Build and maintain client websites.",
+      ["HTML, CSS and JavaScript", "Portfolio or project samples"],
+    ],
+    [
+      "Data Encoder",
+      "Lakbay Travel Services",
+      "Local municipality",
+      "₱12,000–15,000/mo",
+      ["Part-Time"],
+      "Encode bookings and records accurately.",
+      ["Typing speed 35 WPM or higher", "Morning shift, 4 hours"],
+    ],
+    [
+      "Service Crew",
+      "Tindahan Fresh Market",
+      "Local municipality",
+      "₱11,000–14,000/mo",
+      ["Part-Time"],
+      "Assist customers and stock shelves.",
+      ["Weekend availability", "Training on the job"],
+    ],
+    [
+      "Welding NC II Scholarship",
+      "PESO Training Partners",
+      "Provincial district",
+      "Free, with allowance",
+      ["Training"],
+      "Funded 3-month welding course with assessment.",
+      ["Age 18 and above", "Registered PESO jobseeker"],
+    ],
+    [
+      "Digital Literacy Bootcamp",
+      "City Technical Institute",
+      "Local municipality",
+      "Free",
+      ["Training"],
+      "Four-week course on office apps and online work.",
+      ["Basic computer access", "Open to out-of-school youth"],
+    ],
+    [
+      "Virtual Assistant",
+      "Harbor Light Services",
+      "Remote",
+      "₱16,000–20,000/mo",
+      ["Part-Time", "Remote"],
+      "Calendar, email and data support for overseas clients.",
+      ["Good written English", "Own computer"],
+    ],
+    [
+      "Nursing Aide",
+      "Mabuhay Community Clinic",
+      "Provincial district",
+      "₱16,000–20,000/mo",
+      ["Full-Time"],
+      "Assist nurses with patient care.",
+      ["Caregiving certificate preferred", "Rotating shifts"],
+    ],
+  ];
+  const TAGS = ["All", "Full-Time", "Part-Time", "Training", "Remote"];
+  const DB0 = {
+    jobs: [
+      [
+        "Warehouse Associate",
+        "Local municipality",
+        3,
+        "Active",
+        "₱15,000–18,000/mo",
+      ],
+      [
+        "Delivery Rider",
+        "Local municipality",
+        5,
+        "Active",
+        "₱14,000–17,000/mo",
+      ],
+      [
+        "Accounting Clerk",
+        "Provincial district",
+        1,
+        "Pending",
+        "₱20,000–24,000/mo",
+      ],
+      ["Customer Support Agent", "Remote", 4, "Closed", "₱18,000–22,000/mo"],
+    ],
+    apps: [
+      ["Maria Santos", "maria.santos@example.com", "0917 000 0001", 0, "New"],
+      [
+        "Ramon Reyes",
+        "ramon.reyes@example.com",
+        "0917 000 0002",
+        0,
+        "Shortlisted",
+      ],
+      ["Liza Cruz", "liza.cruz@example.com", "0917 000 0003", 0, "New"],
+      ["Paolo Garcia", "paolo.garcia@example.com", "0917 000 0004", 1, "New"],
+      [
+        "Ana Flores",
+        "ana.flores@example.com",
+        "0917 000 0005",
+        1,
+        "Interview · Nov 12, 10:00 AM",
+      ],
+      [
+        "Joel Bautista",
+        "joel.bautista@example.com",
+        "0917 000 0006",
+        3,
+        "Rejected",
+      ],
+    ],
+    reqs: [],
+  };
+  const SKEY = "peso-session",
+    V = { landing: $("#landing"), js: $("#jsView"), em: $("#emView") };
+  let db,
+    tag = "All",
+    saved = new Set(),
+    applied = new Set(),
+    open = new Set(),
+    NOTES = [],
+    cur = null,
+    cvName = "",
+    pend = "",
+    ivI = null,
+    last = null;
+  const adlg = $("#applyDlg"),
+    af = $("#af");
+  const stopTimers = () => {
+    timers.forEach(clearTimeout);
+    timers = [];
+  };
+  const saveSession = () => {
+    try {
+      user
+        ? localStorage.setItem(SKEY, JSON.stringify(user))
+        : localStorage.removeItem(SKEY);
+    } catch (e) {}
+  };
+  const today = () =>
+    new Date(Date.now() - new Date().getTimezoneOffset() * 6e4)
+      .toISOString()
+      .slice(0, 10);
+  const sub = (t) =>
+    `<div class="acts"><button class="btn btn-gold" type="submit">${t}</button></div>`;
+  function companyFrom(m) {
+    const d = (m.split("@")[1] || "company").split(".")[0];
+    return d.charAt(0).toUpperCase() + d.slice(1);
+  }
+  function clearForm(f) {
+    f.reset();
+    $$(".field.bad", f).forEach((x) => x.classList.remove("bad"));
+    $$(".error", f).forEach((x) => (x.textContent = ""));
+    $$("[aria-invalid]", f).forEach((x) => x.removeAttribute("aria-invalid"));
+    const a = $(".alert", f.closest(".dlg,.card") || f);
+    if (a) a.classList.remove("show");
+  }
+
+  /* ---- view controller ---- */
+  function show(v) {
+    Object.keys(V).forEach((k) => {
+      V[k].hidden = k !== v;
+    });
+    $("#appbar").hidden = v === "landing";
+    $("#skip").href =
+      v === "landing" ? "#main" : v === "js" ? "#jsMain" : "#emMain";
+    V[v].classList.remove("vin");
+    void V[v].offsetWidth;
+    V[v].classList.add("vin");
+  }
+  function enter(u, quiet) {
+    stopTimers();
+    user = u;
+    saveSession();
+    if (dlg.open) dlg.close();
+    const js = u.role === "jobseeker",
+      nm = js ? u.name : u.co || u.name;
+    $("#rolePill").textContent = js ? "Jobseeker" : "Employer";
+    $("#appSub").textContent = js
+      ? "Jobseeker dashboard"
+      : "Employer command center";
+    $("#meName").textContent = nm;
+    $("#av").textContent = nm.charAt(0).toUpperCase();
+    $("#bell").hidden = !js;
+    pop(false);
+    show(js ? "js" : "em");
+    window.scrollTo(0, 0);
+    document.title = (js ? "Dashboard" : "Command center") + " | PESO";
+    js ? initJs() : initEm();
+    if (!quiet)
+      toast("Welcome, " + u.name.split(" ")[0] + ". You are now logged in.");
+    $(js ? "#jsMain" : "#emMain").focus({ preventScroll: true });
+  }
+  function logout() {
+    stopTimers();
+    pop(false);
+    [adlg, $("#dJ"), $("#dI")].forEach((d) => d.open && d.close());
+    user = null;
+    saveSession();
+    show("landing");
+    document.title = "Public Employment Service Office";
+    window.scrollTo(0, 0);
+    toast("You have been logged out.");
+  }
+  $("#logout").onclick = logout;
+  $("#appHome").onclick = (e) => {
+    e.preventDefault();
+    window.scrollTo(0, 0);
+  };
+
+  /* ---- notifications ---- */
+  function notes() {
+    const n = NOTES.filter((x) => x[2]).length;
+    $("#nl").innerHTML = NOTES.map(
+      (x) =>
+        `<li class="${x[2] ? "new" : ""}">${esc(x[0])}<time>${x[1]}</time></li>`,
+    ).join("");
+    $("#badge").hidden = !n;
+    $("#badge").textContent = n;
+    $("#bell").setAttribute(
+      "aria-label",
+      "Notifications, " + (n ? n + " unread" : "none unread"),
+    );
+  }
+  function pop(o) {
+    $("#pop").hidden = !o;
+    $("#bell").setAttribute("aria-expanded", o);
+  }
+  $("#bell").onclick = () => pop($("#pop").hidden);
+  $("#readAll").onclick = () => {
+    NOTES.forEach((x) => (x[2] = 0));
+    notes();
+    toast("All notifications marked as read.");
+  };
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && !$("#pop").hidden) {
+      pop(false);
+      $("#bell").focus();
+    }
+  });
+  document.addEventListener("click", (e) => {
+    if (!$("#pop").hidden && !e.target.closest("#pop,#bell")) pop(false);
+  });
+
+  /* ---- jobseeker dashboard ---- */
+  function initJs() {
+    const u = user;
+    saved = new Set();
+    applied = new Set();
+    open = new Set();
+    tag = "All";
+    cvName = u.resume || "";
+    NOTES = [
+      ["Welcome to PESO Online. Browse job offers below.", "Just now", 1],
+      ["New job fair: Mega Job Fair on Nov 14, 2026.", "Today", 1],
+    ];
+    $("#jsHi").textContent = "Welcome, " + u.name.split(" ")[0];
+    $("#jsId").textContent = u.id || "";
+    $("#q").value = "";
+    $("#jsLoc").innerHTML =
+      '<option value="">All locations</option>' +
+      [...new Set(J.map((j) => j[2]))]
+        .map((l) => `<option>${l}</option>`)
+        .join("");
+    $("#chips").innerHTML = TAGS.map(
+      (t) =>
+        `<button type="button" aria-pressed="${t === "All"}" data-t="${t}">${t}</button>`,
+    ).join("");
+    track();
+    stats();
+    notes();
+    render();
+    [
+      [1, 6000, "Your application is now under review."],
+      [2, 15000, "Good news: an interview has been scheduled."],
+    ].forEach(([s, t, m]) => {
+      if ((u.stage || 0) < s) timers.push(setTimeout(() => step(s, m), t));
+    });
+  }
+  function step(s, m) {
+    if (!user || user.role !== "jobseeker") return;
+    user.stage = s;
+    saveSession();
+    track();
+    stats();
+    NOTES.unshift([m, "Just now", 1]);
+    notes();
+    toast(m);
+  }
+  const track = () => {
+    $("#tkBox").innerHTML = timeline(user.stage || 0);
+  };
+  const stats = () => {
+    $("#sSaved").textContent = saved.size;
+    $("#sApps").textContent = 1 + applied.size;
+    $("#sInt").textContent = (user.stage || 0) >= 2 ? 1 : 0;
+  };
+  function render() {
+    const q = $("#q").value.toLowerCase().trim(),
+      l = $("#jsLoc").value;
+    const L = J.map((j, i) => ({ j, i })).filter(
+      ({ j }) =>
+        (tag === "All" || j[4].includes(tag)) &&
+        (!l || j[2] === l) &&
+        (!q || (j[0] + j[1] + j[5] + j[6].join(" ")).toLowerCase().includes(q)),
+    );
+    $("#cnt").textContent = L.length
+      ? L.length + " job offer" + (L.length > 1 ? "s" : "") + " found"
+      : "No job offers match your filters. Clear the search or choose All.";
+    $("#grid").innerHTML = L.map(({ j, i }) => {
+      const a = applied.has(i),
+        o = open.has(i);
+      return `<article class="card jc" aria-labelledby="t${i}"><div class="tags">${j[4].map((t) => `<span class="tag${t === "Remote" ? " r" : ""}">${t}</span>`).join("")}</div><h3 id="t${i}">${j[0]}</h3><p class="cname">${j[1]}</p><div class="meta"><span>📍 ${j[2]}</span></div><p class="pay">${j[3]}</p>${o ? `<div class="det" id="d${i}"><p>${j[5]}</p><ul>${j[6].map((r) => `<li>${r}</li>`).join("")}</ul></div>` : ""}<div class="row"><button class="btn btn-p" type="button" data-a="${i}"${a ? " disabled" : ""}>${a ? "Applied" : "Apply Now"}</button><button class="btn btn-line" type="button" data-v="${i}" aria-expanded="${o}"${o ? ` aria-controls="d${i}"` : ""}>${o ? "Hide details" : "View Details"}</button><button class="btn btn-line" type="button" data-s="${i}" aria-pressed="${saved.has(i)}" aria-label="${saved.has(i) ? "Unsave" : "Save"} ${esc(j[0])}">${saved.has(i) ? "★" : "☆"}</button></div></article>`;
+    }).join("");
+  }
+  $("#chips").onclick = (e) => {
+    const b = e.target.closest("button");
+    if (!b) return;
+    tag = b.dataset.t;
+    $$("#chips button").forEach((x) => x.setAttribute("aria-pressed", x === b));
+    render();
+  };
+  $("#q").oninput = render;
+  $("#jsLoc").onchange = render;
+  $("#grid").onclick = (e) => {
+    const a = e.target.closest("[data-a]"),
+      v = e.target.closest("[data-v]"),
+      s = e.target.closest("[data-s]");
+    if (v) {
+      const i = +v.dataset.v;
+      open.has(i) ? open.delete(i) : open.add(i);
+      render();
+      $('[data-v="' + i + '"]').focus();
+    }
+    if (s) {
+      const i = +s.dataset.s;
+      saved.has(i) ? saved.delete(i) : saved.add(i);
+      stats();
+      render();
+      $('[data-s="' + i + '"]').focus();
+      toast(saved.has(i) ? "Job saved." : "Job removed from saved.");
+    }
+    if (a) {
+      cur = +a.dataset.a;
+      af.reset();
+      pend = "";
+      $("#rf").setCustomValidity("");
+      $("#rf").required = !cvName;
+      $("#rn").textContent = cvName
+        ? cvName + " (on file)"
+        : "No resume on file yet";
+      $("#re").textContent = $("#ce").textContent = "";
+      $("#rs").classList.remove("bad");
+      $("#dJob").textContent = J[cur][0];
+      $("#dMeta").textContent = J[cur][1] + ", " + J[cur][2] + ", " + J[cur][3];
+      adlg.showModal();
+    }
+  };
+  const closeApply = () => {
+    adlg.close();
+    const b = $('[data-a="' + cur + '"]');
+    b && b.focus();
+  };
+  $("#dx").onclick = $("#dc").onclick = closeApply;
+  adlg.addEventListener("click", (e) => {
+    if (e.target === adlg) closeApply();
+  });
+  /* resume check via Constraint Validation: required + custom validity for type/size */
+  function cvCheck() {
+    const rf = $("#rf"),
+      f = rf.files[0];
+    let m = "";
+    if (f) {
+      if (!/\.(pdf|docx?)$/i.test(f.name)) m = "Upload a PDF or Word file.";
+      else if (f.size > 5242880)
+        m = "File is larger than 5 MB. Upload a smaller file.";
+    }
+    rf.setCustomValidity(m);
+    return m;
+  }
+  $("#rf").onchange = () => {
+    const m = cvCheck(),
+      f = $("#rf").files[0];
+    $("#re").textContent = m;
+    $("#rs").classList.toggle("bad", !!m);
+    if (f && !m) {
+      pend = f.name;
+      $("#rn").textContent = f.name + " (new)";
+    }
+  };
+  af.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const rf = $("#rf"),
+      ok = $("#ok");
+    cvCheck();
+    const rm = rf.checkValidity()
+        ? ""
+        : rf.validity.valueMissing
+          ? "Attach your resume to continue."
+          : rf.validationMessage,
+      cm = ok.checkValidity() ? "" : "Confirm the statement above to submit.";
+    $("#re").textContent = rm;
+    $("#rs").classList.toggle("bad", !!rm);
+    $("#ce").textContent = cm;
+    ok.setAttribute("aria-invalid", !!cm);
+    if (rm || cm) {
+      (rm ? rf : ok).focus();
+      return;
+    }
+    if (pend) cvName = pend;
+    applied.add(cur);
+    adlg.close();
+    stats();
+    render();
+    toast("Application sent to " + J[cur][1] + " for " + J[cur][0] + ".");
+    NOTES.unshift([
+      "You applied to " + J[cur][0] + " at " + J[cur][1] + ".",
+      "Just now",
+      1,
+    ]);
+    notes();
+    const b = $('[data-v="' + cur + '"]');
+    b && b.focus();
+  });
+
+  /* ---- employer command center ---- */
+  $("#fJf").innerHTML =
+    F({ id: "vtitle", l: "Job title", full: 1 }) +
+    F({
+      id: "vcat",
+      l: "Employment type",
+      opts: ["Full-Time", "Part-Time", "Training", "Remote"],
+    }) +
+    F({
+      id: "vloc",
+      l: "Location",
+      a: 'placeholder="e.g. Local municipality"',
+    }) +
+    F({
+      id: "vpay",
+      l: "Pay range (₱)",
+      a: 'pattern="₱.*\\d.*" placeholder="e.g. ₱18,000–22,000/mo"',
+      h: "Pesos only, starting with ₱",
+    }) +
+    F({
+      id: "vslots",
+      l: "Slots available",
+      t: "number",
+      a: 'min="1" max="500"',
+    }) +
+    F({
+      id: "vdesc",
+      l: "Description and requirements",
+      ta: 1,
+      full: 1,
+      a: 'minlength="20"',
+    }) +
+    sub("Submit for approval");
+  $("#fIf").innerHTML =
+    F({ id: "iD", l: "Date", t: "date" }) +
+    F({ id: "iT", l: "Time", t: "time" }) +
+    F({
+      id: "iV",
+      l: "Venue or link",
+      full: 1,
+      r: false,
+      a: 'placeholder="PESO office or video link"',
+    }) +
+    sub("Confirm interview");
+  $("#fH").innerHTML =
+    F({
+      id: "hT",
+      l: "What do you need?",
+      full: 1,
+      opts: [
+        "Special hiring event",
+        "Mega Job Fair participation",
+        "Talent matching by a PESO officer",
+      ],
+    }) +
+    F({ id: "hN", l: "Headcount needed", t: "number", a: 'min="1"' }) +
+    F({ id: "hD", l: "Preferred date", t: "date" }) +
+    F({
+      id: "hX",
+      l: "Details",
+      ta: 1,
+      full: 1,
+      r: false,
+      a: 'placeholder="Roles, skills and schedule"',
+    }) +
+    sub("Send request");
+  ["#fJ", "#fI", "#fH"].forEach((s) => live($(s)));
+  function initEm() {
+    db = JSON.parse(JSON.stringify(DB0));
+    $("#emHi").textContent = user.co || user.name;
+    $("#hD").min = $("#iD").min = today();
+    renderAll();
+    mtab(user.tab === "assist" ? "h" : "p");
+  }
+  function mtab(v, f) {
+    $$("#mt button").forEach((b) => {
+      const on = b.dataset.v === v;
+      b.setAttribute("aria-selected", on);
+      b.tabIndex = on ? 0 : -1;
+      if (on && f) b.focus();
+    });
+    $$("#emView .view").forEach((p) => (p.hidden = p.id !== "v-" + v));
+  }
+  $("#mt").onclick = (e) => {
+    const b = e.target.closest("button");
+    if (b) mtab(b.dataset.v);
+  };
+  $("#mt").onkeydown = (e) => {
+    if (!/Arrow(Left|Right)/.test(e.key)) return;
+    const a = $$("#mt button"),
+      i = a.findIndex((b) => b.getAttribute("aria-selected") === "true");
+    mtab(
+      a[(i + (e.key === "ArrowRight" ? 1 : a.length - 1)) % a.length].dataset.v,
+      true,
+    );
+  };
+  const cls = (s) => s.split(" ")[0],
+    lbl = (s) => (s === "Pending" ? "Pending approval" : s);
+  function renderAll() {
+    const Jb = db.jobs,
+      A = db.apps;
+    $("#s1").textContent = Jb.filter((j) => j[3] === "Active").length;
+    $("#s2").textContent = Jb.filter((j) => j[3] === "Pending").length;
+    $("#s3").textContent = A.length;
+    $("#s4").textContent = A.filter((a) => a[4].startsWith("Interview")).length;
+    $("#jb").innerHTML = Jb.map(
+      (j, i) =>
+        `<tr><td><b>${esc(j[0])}</b>${j[5] ? `<small>${esc(j[5])}</small>` : ""}</td><td>${esc(j[1])}</td><td>${j[4] ? esc(j[4]) : "Not stated"}</td><td>${j[2]}</td><td>${A.filter((a) => a[3] === i).length}</td><td><span class="b ${j[3]}">${lbl(j[3])}</span></td><td>${j[3] === "Pending" ? '<span class="hint">Awaiting PESO</span>' : `<button class="btn btn-line sm" type="button" data-tog="${i}">${j[3] === "Active" ? "Close posting" : "Reopen"}</button>`}</td></tr>`,
+    ).join("");
+    const sel = $("#fp").value;
+    $("#fp").innerHTML =
+      '<option value="">All postings</option>' +
+      Jb.map((j, i) => `<option value="${i}">${esc(j[0])}</option>`).join("");
+    $("#fp").value = sel;
+    renderApps();
+    $("#rb").innerHTML = db.reqs.length
+      ? db.reqs
+          .map(
+            (r) =>
+              `<tr><td><b>${r[0]}</b></td><td>${esc(r[1])}</td><td>${r[2]}</td><td><span class="b Pending">Received</span></td></tr>`,
+          )
+          .join("")
+      : '<tr><td colspan="4" class="empty">No requests yet. Send one using the form above.</td></tr>';
+  }
+  function renderApps() {
+    const p = $("#fp").value,
+      s = $("#fs").value,
+      L = db.apps
+        .map((a, i) => ({ a, i }))
+        .filter(({ a }) => (p === "" || a[3] == +p) && (!s || cls(a[4]) === s));
+    $("#ac").textContent =
+      L.length + " applicant" + (L.length === 1 ? "" : "s") + " shown";
+    $("#ab").innerHTML = L.length
+      ? L.map(({ a, i }) => {
+          const f = cls(a[4]),
+            done = f === "Rejected";
+          return `<tr><td><b>${esc(a[0])}</b><small>${esc(a[1])}, ${esc(a[2])}</small></td><td>${esc(db.jobs[a[3]][0])}</td><td><button class="btn btn-line sm" type="button" data-cv="${i}" aria-label="Download resume of ${esc(a[0])}">Download</button></td><td><span class="b ${f}">${esc(a[4])}</span></td><td><div class="ra"><button class="btn btn-line sm" type="button" data-st="${i}:Shortlisted"${f !== "New" ? " disabled" : ""}>Shortlist</button><button class="btn btn-p sm" type="button" data-iv="${i}"${done ? " disabled" : ""}>Schedule interview</button><button class="btn btn-line sm" type="button" data-st="${i}:Rejected"${done ? " disabled" : ""}>Reject</button></div></td></tr>`;
+        }).join("")
+      : '<tr><td colspan="5" class="empty">No applicants match these filters.</td></tr>';
+  }
+  $("#fp").onchange = $("#fs").onchange = renderApps;
+  $("#emView").addEventListener("click", (e) => {
+    const t = e.target.closest(
+      "[data-tog],[data-st],[data-iv],[data-cv],[data-pre]",
+    );
+    if (!t) return;
+    last = t;
+    if (t.dataset.tog) {
+      const j = db.jobs[+t.dataset.tog];
+      j[3] = j[3] === "Active" ? "Closed" : "Active";
+      renderAll();
+      toast(j[0] + " is now " + j[3].toLowerCase() + ".");
+    }
+    if (t.dataset.st) {
+      const [i, s] = t.dataset.st.split(":"),
+        a = db.apps[+i];
+      a[4] = s;
+      renderAll();
+      toast(a[0] + " marked as " + s.toLowerCase() + ".");
+    }
+    if (t.dataset.cv) {
+      const a = db.apps[+t.dataset.cv],
+        u = URL.createObjectURL(
+          new Blob(
+            [
+              "Sample resume for " +
+                a[0] +
+                "\n" +
+                a[1] +
+                "\nDemonstration file only.",
+            ],
+            { type: "text/plain" },
+          ),
+        ),
+        l = document.createElement("a");
+      l.href = u;
+      l.download = a[0].replace(/ /g, "_") + "_Resume.txt";
+      document.body.append(l);
+      l.click();
+      l.remove();
+      setTimeout(() => URL.revokeObjectURL(u), 500);
+      toast("Resume of " + a[0] + " downloaded (sample file).");
+    }
+    if (t.dataset.iv) {
+      ivI = +t.dataset.iv;
+      $("#diW").textContent = "Applicant: " + db.apps[ivI][0];
+      clearForm($("#fI"));
+      $("#iD").min = today();
+      $("#dI").showModal();
+    }
+    if (t.dataset.pre) {
+      $("#hT").value = t.dataset.pre;
+      $("#hT").scrollIntoView({
+        block: "center",
+        behavior: reduced ? "auto" : "smooth",
+      });
+      $("#hT").focus({ preventScroll: true });
+    }
+  });
+  $("#newJob").onclick = (e) => {
+    last = e.currentTarget;
+    clearForm($("#fJ"));
+    $("#dJ").showModal();
+  };
+  ["dJ", "dI"].forEach((id) => {
+    const d = $("#" + id);
+    d.addEventListener("click", (e) => {
+      if (e.target === d || e.target.closest("[data-x]")) {
+        d.close();
+        last && last.focus();
+      }
+    });
+  });
+  $("#fJ").addEventListener("submit", (e) => {
+    e.preventDefault();
+    if (!vForm(e.target)) return;
+    const t = $("#vtitle").value.trim();
+    db.jobs.unshift([
+      t,
+      $("#vloc").value.trim(),
+      +$("#vslots").value,
+      "Pending",
+      $("#vpay").value.trim(),
+      $("#vcat").value,
+    ]);
+    db.apps.forEach((a) => a[3]++);
+    $("#dJ").close();
+    renderAll();
+    mtab("p");
+    toast('"' + t + '" submitted. It will go live after PESO approval.');
+    last && last.focus();
+  });
+  $("#fI").addEventListener("submit", (e) => {
+    e.preventDefault();
+    if (!vForm(e.target)) return;
+    const a = db.apps[ivI],
+      d = new Date($("#iD").value + "T" + $("#iT").value),
+      w =
+        d.toLocaleDateString("en-PH", {
+          month: "short",
+          day: "numeric",
+        }) +
+        ", " +
+        d.toLocaleTimeString("en-PH", {
+          hour: "numeric",
+          minute: "2-digit",
+        });
+    a[4] = "Interview · " + w;
+    $("#dI").close();
+    renderAll();
+    toast("Interview with " + a[0] + " set for " + w + ".");
+    last && last.focus();
+  });
+  $("#fH").addEventListener("submit", (e) => {
+    e.preventDefault();
+    if (!vForm(e.target)) return;
+    const r = rid("REQ-");
+    db.reqs.unshift([r, $("#hT").value, $("#hN").value]);
+    clearForm(e.target);
+    renderAll();
+    toast("Request sent. Your reference is " + r + ".");
+  });
+
+  /* ---- restore session on load; keep tabs in sync ---- */
+  addEventListener("storage", (e) => {
+    if (e.key !== SKEY) return;
+    let s = null;
+    try {
+      s = e.newValue && JSON.parse(e.newValue);
+    } catch (_) {}
+    if (!s && user) {
+      stopTimers();
+      user = null;
+      show("landing");
+    } else if (s && !user) enter(s, true);
+  });
+  try {
+    const s = JSON.parse(localStorage.getItem(SKEY) || "null");
+    if (
+      s &&
+      (s.role === "jobseeker" || s.role === "employer") &&
+      typeof s.name === "string" &&
+      s.name
+    )
+      enter(s, true);
+  } catch (e) {}
+})();
+
+
+
+=== FILE: ./js/auth.js ===
+(function () {
+  "use strict";
+  /* ---------- registration wizard ---------- */
+  const form = document.getElementById("joinForm");
+  if (form) {
+    const roleInput = document.getElementById("roleInput");
+    const tabs = Array.from(document.querySelectorAll("[data-role]"));
+    const panels = Array.from(form.querySelectorAll("[data-step]"));
+    const roleOnly = Array.from(form.querySelectorAll("[data-role-only]"));
+    const steps = Array.from(document.querySelectorAll("#wizSteps li"));
+    const bar = document.getElementById("wizBar");
+    const head = document.getElementById("wizHead");
+    const alertBox = document.getElementById("formAlert");
+    let step = 1;
+
+    const controls = (el) =>
+      el.matches("input,select,textarea,button")
+        ? [el]
+        : Array.from(el.querySelectorAll("input,select,textarea,button"));
+
+    function applyRole() {
+      const role = roleInput.value;
+      roleOnly.forEach((el) => {
+        const mine = el.dataset.roleOnly === role;
+        el.hidden = !mine;
+        const panel = el.closest("[data-step]");
+        const panelOn = panel && !panel.hidden;
+        controls(el).forEach((c) => {
+          c.disabled = !(mine && panelOn);
+        });
+      });
+      if (head) head.hidden = role === "employer";
+    }
+
+    function showStep(n, dir) {
+      step = n;
+      panels.forEach((p) => {
+        const on = Number(p.dataset.step) === n;
+        p.hidden = !on;
+        controls(p).forEach((c) => {
+          c.disabled = !on;
+        });
+        p.classList.remove("next", "prev");
+        if (on && dir) p.classList.add(dir);
+      });
+      steps.forEach((li, i) => {
+        li.classList.toggle("on", i === n - 1);
+        li.classList.toggle("done", i < n - 1);
+      });
+      if (bar) bar.style.width = (n / 3) * 100 + "%";
+      applyRole();
+      const h = panels.find((p) => !p.hidden)?.querySelector("h3");
+      if (h) {
+        h.setAttribute("tabindex", "-1");
+        h.focus();
+      }
+    }
+
+    function setRole(role) {
+      roleInput.value = role;
+      tabs.forEach((t) =>
+        t.setAttribute("aria-selected", String(t.dataset.role === role)),
+      );
+      showStep(1);
+      if (alertBox) alertBox.classList.remove("show");
+    }
+
+    function fieldOf(el) {
+      return el.closest(".field");
+    }
+
+    function validate(panel) {
+      let ok = true,
+        first = null;
+      panel.querySelectorAll("input,select,textarea").forEach((el) => {
+        if (el.disabled) return;
+        const f = fieldOf(el);
+        let bad = !el.checkValidity();
+        if (el.id === "confirm_password") {
+          bad =
+            el.value !== document.getElementById("password").value || !el.value;
+        }
+        if (f) f.classList.toggle("bad", bad);
+        if (bad) {
+          ok = false;
+          first = first || el;
+        }
+      });
+      if (first) first.focus();
+      return ok;
+    }
+
+    form.addEventListener("click", (e) => {
+      const next = e.target.closest("[data-next]");
+      const back = e.target.closest("[data-back]");
+      if (next) {
+        const panel = panels.find((p) => !p.hidden);
+        if (validate(panel)) {
+          if (alertBox) alertBox.classList.remove("show");
+          showStep(step + 1, "next");
+        } else if (alertBox) {
+          alertBox.textContent = "Please correct the highlighted fields.";
+          alertBox.classList.add("show");
+        }
+      }
+      if (back) showStep(step - 1, "prev");
+    });
+
+    form.addEventListener("input", (e) => {
+      const f = fieldOf(e.target);
+      if (f && f.classList.contains("bad") && e.target.checkValidity())
+        f.classList.remove("bad");
+    });
+
+    /* =========================================================
+		FIXED SUBMIT HANDLER
+		Ensures fields are ENABLED before submission so the browser
+		actually sends their values to PHP.
+		========================================================= */
+    form.addEventListener("submit", (e) => {
+      let badStep = null;
+      // 1. Validate all relevant steps
+      panels.forEach((p) => {
+        const isJobseeker = roleInput.value === "jobseeker";
+        const relevant = isJobseeker || p.dataset.step === "1";
+        if (!relevant) return;
+
+        const wasHidden = p.hidden;
+        if (wasHidden) p.hidden = false;
+        controls(p).forEach((c) => {
+          const roleOnly = c.closest("[data-role-only]");
+          if (!roleOnly || roleOnly.dataset.roleOnly === roleInput.value) {
+            c.disabled = false;
+          }
+        });
+
+        if (!validate(p) && !badStep) {
+          badStep = Number(p.dataset.step);
+        }
+      });
+
+      // 2. If validation failed, stop submission and go to the bad step
+      if (badStep) {
+        e.preventDefault();
+        showStep(badStep);
+        if (alertBox) {
+          alertBox.textContent =
+            "Please correct the highlighted fields before submitting.";
+          alertBox.classList.add("show");
+        }
+        return;
+      }
+
+      // 3. CRITICAL FIX: Ensure all relevant fields are ENABLED for submission.
+      panels.forEach((p) => {
+        const isJobseeker = roleInput.value === "jobseeker";
+        const relevant = isJobseeker || p.dataset.step === "1";
+        if (!relevant) return;
+        controls(p).forEach((c) => {
+          const roleOnly = c.closest("[data-role-only]");
+          if (!roleOnly || roleOnly.dataset.roleOnly === roleInput.value) {
+            c.disabled = false;
+          }
+        });
+      });
+
+      // 4. Disable fields from the OTHER role so they aren't submitted
+      roleOnly.forEach((el) => {
+        if (el.dataset.roleOnly !== roleInput.value) {
+          controls(el).forEach((c) => (c.disabled = true));
+        }
+      });
+
+      // 5. Prevent double submission
+      const btn = form.querySelector('button[type="submit"]:not([disabled])');
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = "Creating account…";
+      }
+    });
+
+    tabs.forEach((t) =>
+      t.addEventListener("click", () => setRole(t.dataset.role)),
+    );
+
+    document
+      .querySelectorAll("[data-role-link]")
+      .forEach((a) =>
+        a.addEventListener("click", () => setRole(a.dataset.roleLink)),
+      );
+
+    const preset = new URLSearchParams(location.search).get("role");
+    setRole(preset === "employer" ? "employer" : "jobseeker");
+  }
+
+  /* ---------- login dialog tabs ---------- */
+  // Role is now auto-detected from the database in login.php.
+  // The tabs have been removed from the login dialog for a seamless experience.
+
+  /* ---------- password reveal ---------- */
+  document.querySelectorAll("[data-toggle-pw]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const input = document.getElementById(btn.dataset.togglePw);
+      if (!input) return;
+      const show = input.type === "password";
+      input.type = show ? "text" : "password";
+      btn.textContent = show ? "Hide" : "Show";
+    });
+  });
+
+  /* ---------- file name preview ---------- */
+  document.querySelectorAll('input[type="file"]').forEach((input) => {
+    input.addEventListener("change", () => {
+      const label = document.querySelector(
+        '[data-file-label="' + input.id + '"]',
+      );
+      if (label && input.files[0])
+        label.textContent = "Selected: " + input.files[0].name;
+    });
+  });
+
+  /* ---------- copy tracking ID ---------- */
+  document.querySelectorAll("[data-copy]").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(btn.dataset.copy);
+        btn.textContent = "Copied";
+        setTimeout(() => {
+          btn.textContent = "Copy ID";
+        }, 1800);
+      } catch (_) {
+        /* clipboard unavailable */
+      }
+    });
+  });
+
+  /* ---------- generic dialog close ---------- */
+  document
+    .querySelectorAll("[data-close]")
+    .forEach((btn) =>
+      btn.addEventListener("click", () => btn.closest("dialog")?.close()),
+    );
+})();
+
+
+
+=== FILE: ./db.php ===
+<?php
+declare(strict_types=1);
+
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+$dsn = 'mysql:host=127.0.0.1;dbname=peso_portal;charset=utf8mb4';
+
+try {
+    $pdo = new PDO($dsn, 'root', '', [
+        PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+        PDO::ATTR_EMULATE_PREPARES   => false,
+    ]);
+} catch (PDOException $e) {
+    http_response_code(500);
+    exit('Database connection failed. Start MySQL in XAMPP and import schema.sql.');
+}
+
+
+=== FILE: ./appbar.php ===
+<?php
+// Security check: Redirect to home if not logged in
+if (empty($_SESSION['user_id'])) {
+    header('Location: peso-portal.html');
+    exit;
+}
+$isEm = ($_SESSION['role'] ?? '') === 'employer';
+$name = htmlspecialchars($_SESSION['name'] ?? 'User', ENT_QUOTES, 'UTF-8');
+?>
+<header class="appbar">
+  <div class="container">
+    <a href="dashboard.php" class="brand">
+      <span class="mark">PESO</span>
+      <span>
+        <strong>PESO Online</strong>
+        <small>Member area</small>
+      </span>
+    </a>
+    <div class="tools">
+      <span class="pill"><?= $isEm ? 'Employer' : 'Jobseeker' ?></span>
+      <button class="btn btn-glass bell" type="button" aria-label="Notifications">
+        🔔<span class="badge">0</span>
+      </button>
+      <div class="me">
+        <div class="av"><?= strtoupper(substr($name, 0, 1)) ?></div>
+        <div>
+          <small>Signed in as</small>
+          <b><?= $name ?></b>
+        </div>
+      </div>
+      <a href="logout.php" class="btn btn-glass">Log out</a>
+    </div>
+  </div>
+</header>
+<main id="main">
+
+
+=== FILE: ./register_success.php ===
+<?php
+require_once __DIR__ . '/db.php';
+if (empty($_SESSION['just_registered'])) { header('Location: peso-portal.html#join'); exit; }
+unset($_SESSION['just_registered']);
+
+// Set the page title for the browser tab
+$pageTitle = 'Account created';
+
+// Include the top HTML and the Logged-in Navigation
+require_once __DIR__ . '/header.php';
+require_once __DIR__ . '/appbar.php'; 
+?>
+
+<section class="block">
+  <div class="container">
+    <div class="shell">
+      <div class="confirm">
+        <div class="ticket">
+          <div>
+            <p class="tag"><?= $isEm ? 'Employer account' : 'Application tracking ID' ?></p>
+            <p class="id"><?= htmlspecialchars($_SESSION['tracking_id'], ENT_QUOTES, 'UTF-8') ?></p>
+            <p>Thank you, <?= htmlspecialchars($_SESSION['name'], ENT_QUOTES, 'UTF-8') ?>. We will contact you at your registered email. Keep this ID to follow your application.</p>
+            <div class="acts">
+              <a class="btn btn-gold" href="dashboard.php">
+                <?= $isEm ? 'Open recruiter command center' : 'Open my dashboard and job offers' ?>
+              </a>
+              <button class="btn btn-glass" type="button" data-copy="<?= htmlspecialchars($_SESSION['tracking_id'], ENT_QUOTES, 'UTF-8') ?>">Copy ID</button>
+            </div>
+          </div>
+          <div>
+            <h2>Status</h2>
+            <ol class="timeline">
+              <li class="done">Account created <span>Today</span></li>
+              <?php if ($isEm): ?>
+                <li class="cur">PESO verification <span>Within 3 working days</span></li>
+                <li>Post vacancies <span>After verification</span></li>
+              <?php else: ?>
+                <li class="cur">Profile matching <span>Ongoing</span></li>
+                <li>Employer review <span>When you apply</span></li>
+              <?php endif; ?>
+            </ol>
+          </div>
+        </div>
+        <p class="note">All PESO services are free. Never pay a fee to anyone claiming to process your application.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<?php 
+// Include the footer, login dialog, and JS files
+require_once __DIR__ . '/footer.php'; 
+?>
+
+
+=== FILE: ./header.php ===
+<?php
+// Set default page title if not provided by the including file
+if (!isset($pageTitle)) $pageTitle = 'PESO Online';
+?>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title><?= htmlspecialchars($pageTitle) ?> — PESO</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+
+=== FILE: ./register.php ===
+<?php
+declare(strict_types=1);
+require_once __DIR__ . '/db.php';
+
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    header('Location: peso-portal.html#join');
+    exit;
+}
+
+function val(string $key): string {
+    return trim((string)($_POST[$key] ?? ''));
+}
+
+function fail(array $errors): void {
+    http_response_code(422);
+    $items = '';
+    foreach ($errors as $e) {
+        $items .= '<li>' . htmlspecialchars($e, ENT_QUOTES, 'UTF-8') . '</li>';
+    }
+    echo '<!doctype html><html lang="en"><head><meta charset="utf-8">'
+       . '<meta name="viewport" content="width=device-width,initial-scale=1">'
+       . '<title>Registration problem — PESO</title>'
+       . '<link rel="stylesheet" href="styles.css"></head><body>'
+       . '<section class="block"><div class="container"><div class="shell"><div class="wpanel">'
+       . '<h3>We could not create your account</h3>'
+       . '<p class="help">Please go back and fix the following:</p>'
+       . '<div class="alert show"><ul>' . $items . '</ul></div>'
+       . '<div class="acts"><a class="btn btn-p" href="peso-portal.html#join">Back to registration</a>'
+       . '<button class="btn btn-line" type="button" onclick="history.back()">Keep my entries</button>'
+       . '</div></div></div></div></section></body></html>';
+    exit;
+}
+
+function upload_doc(string $field, string $folder, bool $required, array &$errors): array {
+    if (!isset($_FILES[$field]) || $_FILES[$field]['error'] === UPLOAD_ERR_NO_FILE) {
+        if ($required) $errors[] = 'Please attach your resume (PDF, DOC or DOCX).';
+        return [null, null];
+    }
+    $f = $_FILES[$field];
+    if ($f['error'] !== UPLOAD_ERR_OK) { $errors[] = 'The upload failed. Please try again.'; return [null, null]; }
+    if ($f['size'] > 5 * 1024 * 1024)  { $errors[] = 'The file must be 5 MB or smaller.';   return [null, null]; }
+
+    $allowed = [
+        'application/pdf' => 'pdf',
+        'application/msword' => 'doc',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document' => 'docx',
+    ];
+    $mime = (new finfo(FILEINFO_MIME_TYPE))->file($f['tmp_name']);
+    if (!isset($allowed[$mime])) { $errors[] = 'Only PDF, DOC or DOCX files are accepted.'; return [null, null]; }
+
+    $dir = __DIR__ . '/uploads/' . $folder;
+    if (!is_dir($dir)) mkdir($dir, 0775, true);
+
+    $stored = bin2hex(random_bytes(16)) . '.' . $allowed[$mime];
+    if (!move_uploaded_file($f['tmp_name'], $dir . '/' . $stored)) {
+        $errors[] = 'The file could not be saved on the server.';
+        return [null, null];
+    }
+    return [$stored, substr(basename($f['name']), 0, 255)];
+}
+
+/* ---------- shared fields ---------- */
+$role    = val('role');
+$first   = val('first_name');
+$last    = val('last_name');
+$email   = mb_strtolower(val('email'));
+$mobile  = val('mobile');
+$pass    = (string)($_POST['password'] ?? '');
+$confirm = (string)($_POST['confirm_password'] ?? '');
+$consent = val('consent') === '1';
+$errors  = [];
+
+if (!in_array($role, ['jobseeker', 'employer'], true)) $errors[] = 'Please choose an account type.';
+if ($first === '')  $errors[] = 'First name is required.';
+if ($last === '')   $errors[] = 'Last name is required.';
+if (!filter_var($email, FILTER_VALIDATE_EMAIL)) $errors[] = 'A valid email address is required.';
+if (!preg_match('/^[0-9+\s()\-]{7,20}$/', $mobile)) $errors[] = 'A valid mobile number is required.';
+if (strlen($pass) < 8)   $errors[] = 'Password must be at least 8 characters.';
+if ($pass !== $confirm)  $errors[] = 'Passwords do not match.';
+if (!$consent)           $errors[] = 'You must agree to the data privacy statement.';
+
+/* ---------- role-specific fields ---------- */
+if ($role === 'jobseeker') {
+    $birthdate = val('birthdate');
+    $d = DateTime::createFromFormat('Y-m-d', $birthdate);
+    if (!$d || $d->format('Y-m-d') !== $birthdate) $errors[] = 'A valid date of birth is required.';
+
+    $sex      = val('sex');
+    $barangay = val('barangay');
+    $city     = val('city');
+    $educ     = val('highest_education');
+    $course   = val('course');
+    $skills   = val('skills');
+    $years    = max(0, min(60, (int)val('experience_years')));
+    $jobType  = val('preferred_job_type');
+    $location = val('preferred_location');
+    $salary   = val('expected_salary') === '' ? null : (float)val('expected_salary');
+    $avail    = val('availability');
+
+    if ($sex === '')       $errors[] = 'Please select your sex.';
+    if ($barangay === '')  $errors[] = 'Barangay is required.';
+    if ($city === '')      $errors[] = 'City or municipality is required.';
+    if ($educ === '')      $errors[] = 'Highest education is required.';
+    if ($skills === '')    $errors[] = 'Please list at least one skill.';
+    if ($jobType === '')   $errors[] = 'Work arrangement is required.';
+    if ($location === '')  $errors[] = 'Preferred location is required.';
+    if ($avail === '')     $errors[] = 'Availability is required.';
+
+    [$resumeFile, $resumeOrig] = upload_doc('resume', 'resumes', true, $errors);
+} else {
+    $company  = val('company_name');
+    $industry = val('industry');
+    $position = val('position_title');
+    $size     = val('company_size');
+    $permitNo = val('business_permit_no');
+    $address  = val('company_address');
+    $website  = val('website');
+    $hiring   = max(0, min(9999, (int)val('hiring_count')));
+
+    if ($company === '')  $errors[] = 'Company name is required.';
+    if ($industry === '') $errors[] = 'Industry is required.';
+    if ($position === '') $errors[] = 'Your position is required.';
+    if ($permitNo === '') $errors[] = 'Business permit / DTI / SEC number is required.';
+    if ($address === '')  $errors[] = 'Company address is required.';
+    if ($website !== '' && !filter_var($website, FILTER_VALIDATE_URL)) $errors[] = 'Website must be a valid URL.';
+
+    [$permitFile, $permitOrig] = upload_doc('business_permit', 'permits', false, $errors);
+}
+
+/* ---------- duplicate email ---------- */
+if (!$errors) {
+    $check = $pdo->prepare('SELECT id FROM users WHERE email = ? LIMIT 1');
+    $check->execute([$email]);
+    if ($check->fetch()) $errors[] = 'That email address is already registered. Please log in instead.';
+}
+
+if ($errors) fail($errors);
+
+/* ---------- save ---------- */
+$trackingId = 'PESO-' . date('Y') . '-' . strtoupper(bin2hex(random_bytes(3)));
+$hash       = password_hash($pass, PASSWORD_DEFAULT);
+$status     = $role === 'employer' ? 'pending' : 'active';
+
+try {
+    $pdo->beginTransaction();
+
+    $pdo->prepare(
+        'INSERT INTO users (tracking_id, role, email, password_hash, first_name, last_name, mobile, status)
+         VALUES (?,?,?,?,?,?,?,?)'
+    )->execute([$trackingId, $role, $email, $hash, $first, $last, $mobile, $status]);
+
+    $userId = (int)$pdo->lastInsertId();
+
+    if ($role === 'jobseeker') {
+        $pdo->prepare(
+            'INSERT INTO jobseeker_profiles
+             (user_id, birthdate, sex, barangay, city, highest_education, course, skills,
+              experience_years, resume_filename, resume_original, preferred_job_type,
+              preferred_location, expected_salary, availability, consent)
+             VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,1)'
+        )->execute([
+            $userId, $birthdate, $sex, $barangay, $city, $educ, $course, $skills,
+            $years, $resumeFile, $resumeOrig, $jobType, $location, $salary, $avail
+        ]);
+    } else {
+        $pdo->prepare(
+            'INSERT INTO employer_profiles
+             (user_id, company_name, industry, position_title, company_size, business_permit_no,
+              company_address, website, hiring_count, permit_filename, permit_original, consent)
+             VALUES (?,?,?,?,?,?,?,?,?,?,?,1)'
+        )->execute([
+            $userId, $company, $industry, $position, $size, $permitNo,
+            $address, $website, $hiring, $permitFile, $permitOrig
+        ]);
+    }
+
+    $pdo->commit();
+} catch (Throwable $e) {
+    if ($pdo->inTransaction()) $pdo->rollBack();
+    error_log('PESO registration: ' . $e->getMessage());
+    fail(['Something went wrong while saving your account. Please try again.']);
+}
+
+/* ---------- log in + show ticket ---------- */
+session_regenerate_id(true);
+$_SESSION['user_id']     = $userId;
+$_SESSION['role']        = $role;
+$_SESSION['name']        = $first . ' ' . $last;
+$_SESSION['tracking_id'] = $trackingId;
+$_SESSION['status']      = $status;
+$_SESSION['just_registered'] = true;
+
+header('Location: register_success.php');
+exit;
+
+
+=== FILE: ./css/styles.css ===
+:root {
+    --bg: #f4f6fa;
+    --card: #fff;
+    --text: #12203d;
+    --muted: #46556f;
+    --line: #dce2ec;
+    --soft: #eaeef5;
+    --navy: #0f2347;
+    --navy2: #1a3566;
+    --gold: #e2b44f;
+    --goldtx: #7d5800;
+    --goldbg: #fbf1d6;
+    --btn: #0f2347;
+    --btnfg: #fff;
+    --focus: #1d4fa8;
+    --ok: #14663f;
+    --okbg: #e3f3ea;
+    --err: #b3261e;
+    --errbg: #fdecea;
+    --sh:
+        0 1px 2px rgba(10, 22, 48, 0.06), 0 8px 24px rgba(10, 22, 48, 0.07);
+    --hd: "Newsreader", Georgia, serif;
+    --bd: "Instrument Sans", "Segoe UI", system-ui, sans-serif;
+    --r: 12px;
+}
+
+[data-theme="dark"] {
+    --bg: #070f22;
+    --card: #0e1b38;
+    --text: #eaf0fb;
+    --muted: #a9b8d3;
+    --line: #223760;
+    --soft: #13244a;
+    --goldtx: #f0c766;
+    --goldbg: #2a2410;
+    --btn: #e2b44f;
+    --btnfg: #0a1630;
+    --focus: #f0c766;
+    --ok: #6fd3a0;
+    --okbg: #0f2a20;
+    --err: #ff9a92;
+    --errbg: #33161a;
+    --sh: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 84px;
+}
+
+body {
+    margin: 0;
+    font: 1rem/1.6 var(--bd);
+    color: var(--text);
+    background: var(--bg);
+    -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3 {
+    font-family: var(--hd);
+    line-height: 1.15;
+    margin: 0;
+    letter-spacing: -0.01em;
+}
+
+p {
+    margin: 0;
+}
+
+a {
+    color: var(--focus);
+}
+
+:focus-visible {
+    outline: 3px solid var(--focus);
+    outline-offset: 3px;
+    border-radius: 6px;
+}
+
+.container {
+    max-width: 1160px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+[hidden] {
+    display: none !important;
+}
+
+.skip {
+    position: absolute;
+    left: 12px;
+    top: -60px;
+    background: var(--gold);
+    color: #0a1630;
+    padding: 10px 16px;
+    border-radius: 8px;
+    z-index: 500;
+    font-weight: 600;
+}
+
+.skip:focus {
+    top: 12px;
+}
+
+.notice {
+    background: var(--navy);
+    color: #d8e2f4;
+    font-size: 0.86rem;
+}
+
+.notice .container {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    justify-content: space-between;
+    padding-block: 8px;
+}
+
+.notice button {
+    background: none;
+    border: 0;
+    color: #fff;
+    font-size: 1.3rem;
+    cursor: pointer;
+    min-width: 32px;
+    min-height: 32px;
+}
+
+.nav {
+    position: sticky;
+    top: 0;
+    z-index: 120;
+    background: color-mix(in srgb, var(--card) 88%, transparent);
+    backdrop-filter: blur(14px);
+    border-bottom: 1px solid var(--line);
+}
+
+.nav .container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 68px;
+    gap: 12px;
+}
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-decoration: none;
+    color: var(--text);
+}
+
+.mark {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    background: linear-gradient(145deg, var(--navy2), #060f26);
+    color: var(--gold);
+    display: grid;
+    place-items: center;
+    font: 700 0.78rem var(--hd);
+    box-shadow: inset 0 0 0 1.5px var(--gold);
+}
+
+.brand strong {
+    display: block;
+    font: 700 1.05rem/1.1 var(--hd);
+}
+
+.brand small {
+    color: var(--muted);
+    font-size: 0.74rem;
+}
+
+.links {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.links a.l {
+    color: var(--muted);
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.93rem;
+    padding: 8px 12px;
+    border-radius: 8px;
+}
+
+.links a.l:hover {
+    background: var(--soft);
+    color: var(--text);
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font: 600 0.96rem var(--bd);
+    min-height: 44px;
+    padding: 10px 20px;
+    border-radius: 10px;
+    border: 1.5px solid transparent;
+    cursor: pointer;
+    text-decoration: none;
+    transition:
+        transform 0.15s,
+        box-shadow 0.15s,
+        background 0.15s;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+}
+
+.btn:active {
+    transform: none;
+}
+
+.btn:disabled {
+    opacity: 0.6;
+    cursor: default;
+    transform: none;
+}
+
+.btn-p {
+    background: var(--btn);
+    color: var(--btnfg);
+}
+
+.btn-p:hover {
+    box-shadow: 0 6px 18px rgba(15, 35, 71, 0.3);
+}
+
+.btn-gold {
+    background: linear-gradient(180deg, #f0c766, #e2b44f);
+    color: #0a1630;
+    box-shadow: 0 6px 20px rgba(226, 180, 79, 0.28);
+}
+
+.btn-line {
+    background: transparent;
+    border-color: var(--line);
+    color: var(--text);
+}
+
+.btn-line:hover {
+    border-color: var(--focus);
+}
+
+.btn-glass {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.35);
+    color: #fff;
+}
+
+.btn-glass:hover {
+    background: rgba(255, 255, 255, 0.16);
+}
+
+.toggle {
+    display: none;
+    width: 44px;
+    height: 44px;
+    border: 1px solid var(--line);
+    background: var(--card);
+    border-radius: 10px;
+    cursor: pointer;
+    color: var(--text);
+    position: relative;
+    z-index: 140;
+}
+
+.toggle i,
+.toggle i::before,
+.toggle i::after {
+    display: block;
+    width: 20px;
+    height: 2px;
+    background: currentColor;
+    margin: auto;
+    position: relative;
+    transition: 0.2s;
+}
+
+.toggle i::before,
+.toggle i::after {
+    content: "";
+    position: absolute;
+    left: 0;
+}
+
+.toggle i::before {
+    top: -6px;
+}
+
+.toggle i::after {
+    top: 6px;
+}
+
+.toggle[aria-expanded="true"] i {
+    background: transparent;
+}
+
+.toggle[aria-expanded="true"] i::before {
+    transform: translateY(6px) rotate(45deg);
+}
+
+.toggle[aria-expanded="true"] i::after {
+    transform: translateY(-6px) rotate(-45deg);
+}
+
+.scrim {
+    position: fixed;
+    inset: 0;
+    background: rgba(5, 12, 28, 0.6);
+    z-index: 125;
+    opacity: 0;
+    visibility: hidden;
+    transition: 0.25s;
+}
+
+.scrim.on {
+    opacity: 1;
+    visibility: visible;
+}
+
+.hero {
+    position: relative;
+    overflow: hidden;
+    color: #fff;
+    --focus: #f0c766;
+    background:
+        radial-gradient(900px 500px at 85% 10%,
+            rgba(226, 180, 79, 0.22),
+            transparent 60%),
+        linear-gradient(135deg, #040b1d 0%, #0f2347 55%, #1b3a70 100%);
+    padding: 84px 0 72px;
+}
+
+.sun {
+    position: absolute;
+    right: -180px;
+    top: -170px;
+    width: 760px;
+    height: 760px;
+    opacity: 0.2;
+    animation: spin 180s linear infinite;
+    pointer-events: none;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.hero-grid {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1.25fr 1fr;
+    gap: 48px;
+    align-items: center;
+}
+
+.hero h1 {
+    font-size: clamp(2.5rem, 5.4vw, 4.3rem);
+    font-weight: 600;
+    margin-bottom: 20px;
+}
+
+.hero .lead {
+    font-size: 1.14rem;
+    color: #d3ddf0;
+    max-width: 54ch;
+    margin-bottom: 28px;
+}
+
+.cta {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.badges {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 28px;
+    padding: 0;
+    list-style: none;
+}
+
+.badges li {
+    font-size: 0.84rem;
+    color: #e8eefb;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    border-radius: 99px;
+    padding: 6px 14px;
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.live {
+    background: rgba(255, 255, 255, 0.07);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 20px;
+    padding: 24px;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+}
+
+.live h2 {
+    font: 600 1rem var(--bd);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+    color: #fff;
+}
+
+.dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #4be0a0;
+    box-shadow: 0 0 0 0 rgba(75, 224, 160, 0.6);
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    70% {
+        box-shadow: 0 0 0 10px rgba(75, 224, 160, 0);
+    }
+
+    100% {
+        box-shadow: 0 0 0 0 rgba(75, 224, 160, 0);
+    }
+}
+
+.nums {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.nums div {
+    background: rgba(5, 12, 28, 0.4);
+    border-radius: 14px;
+    padding: 16px;
+}
+
+.nums b {
+    display: block;
+    font: 600 2rem/1 var(--hd);
+    color: #f0c766;
+    font-variant-numeric: tabular-nums;
+}
+
+.nums span {
+    font-size: 0.84rem;
+    color: #cbd7ee;
+}
+
+.live small {
+    display: block;
+    margin-top: 14px;
+    color: #aebcd8;
+    font-size: 0.78rem;
+}
+
+.ticker {
+    background: #060f26;
+    color: #e8eefb;
+    border-block: 1px solid rgba(226, 180, 79, 0.35);
+    display: flex;
+    align-items: center;
+    --focus: #f0c766;
+}
+
+.ticker h2 {
+    font: 600 0.85rem var(--bd);
+    color: #f0c766;
+    padding: 0 18px;
+    white-space: nowrap;
+}
+
+.tk {
+    overflow: hidden;
+    flex: 1;
+    mask-image: linear-gradient(90deg,
+            transparent,
+            #000 4%,
+            #000 96%,
+            transparent);
+}
+
+.tk-in {
+    display: flex;
+    width: max-content;
+    animation: tk 60s linear infinite;
+}
+
+.tk.paused .tk-in {
+    animation-play-state: paused;
+}
+
+.tk ul {
+    display: flex;
+    gap: 36px;
+    padding: 12px 18px;
+    margin: 0;
+    list-style: none;
+}
+
+.tk li {
+    white-space: nowrap;
+    font-size: 0.92rem;
+}
+
+.tk li b {
+    color: #f0c766;
+    margin-left: 6px;
+}
+
+@keyframes tk {
+    to {
+        transform: translateX(-50%);
+    }
+}
+
+.ticker button {
+    background: none;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: #fff;
+    border-radius: 8px;
+    margin: 0 14px;
+    min-height: 36px;
+    padding: 0 12px;
+    cursor: pointer;
+    font: 500 0.82rem var(--bd);
+}
+
+.block {
+    padding: 84px 0;
+}
+
+.alt {
+    background: var(--card);
+    border-block: 1px solid var(--line);
+}
+
+.sh {
+    max-width: 700px;
+    margin-bottom: 40px;
+}
+
+.sh h2 {
+    font-size: clamp(1.9rem, 3.4vw, 2.7rem);
+    margin-bottom: 12px;
+}
+
+.sh p {
+    color: var(--muted);
+}
+
+.grid {
+    display: grid;
+    gap: 20px;
+    grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+}
+
+.card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--r);
+    padding: 24px;
+    box-shadow: var(--sh);
+    transition:
+        transform 0.2s,
+        border-color 0.2s,
+        box-shadow 0.2s;
+}
+
+.card:hover {
+    transform: translateY(-3px);
+    border-color: var(--gold);
+}
+
+.alt .card {
+    background: var(--bg);
+}
+
+.card h3 {
+    font-size: 1.2rem;
+    margin: 10px 0 6px;
+}
+
+.card p {
+    color: var(--muted);
+    font-size: 0.95rem;
+}
+
+.ic {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: var(--goldbg);
+    display: grid;
+    place-items: center;
+    font-size: 1.3rem;
+}
+
+.tag {
+    display: inline-block;
+    font: 600 0.76rem var(--bd);
+    padding: 3px 10px;
+    border-radius: 99px;
+    background: var(--goldbg);
+    color: var(--goldtx);
+}
+
+.fair {
+    border-left: 4px solid var(--gold);
+}
+
+.fair time {
+    font: 600 0.88rem var(--bd);
+    color: var(--goldtx);
+}
+
+.note {
+    font-size: 0.82rem;
+    color: var(--muted);
+    margin-top: 18px;
+}
+
+.tabs {
+    display: inline-flex;
+    background: var(--soft);
+    padding: 5px;
+    border-radius: 14px;
+    gap: 4px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+}
+
+.tabs button {
+    font: 600 0.94rem var(--bd);
+    min-height: 44px;
+    padding: 0 20px;
+    border: 0;
+    border-radius: 10px;
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+}
+
+.tabs button[aria-selected="true"],
+.tabs button[aria-pressed="true"] {
+    background: var(--card);
+    color: var(--text);
+    box-shadow: var(--sh);
+}
+
+.shell {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    box-shadow: var(--sh);
+    overflow: hidden;
+}
+
+.whead {
+    padding: 24px 32px;
+    border-bottom: 1px solid var(--line);
+    background: linear-gradient(180deg, var(--soft), transparent);
+}
+
+.wsteps {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    list-style: none;
+    margin: 0 0 14px;
+    padding: 0;
+}
+
+.wsteps li {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    color: var(--muted);
+    font-weight: 500;
+    font-size: 0.92rem;
+}
+
+.wsteps i {
+    font-style: normal;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    background: var(--line);
+    color: var(--text);
+    font-weight: 700;
+    flex: none;
+}
+
+.wsteps .on {
+    color: var(--text);
+}
+
+.wsteps .on i {
+    background: var(--btn);
+    color: var(--btnfg);
+}
+
+.wsteps .done i {
+    background: var(--ok);
+    color: #fff;
+}
+
+.bar {
+    height: 8px;
+    background: var(--line);
+    border-radius: 9px;
+    overflow: hidden;
+}
+
+.bar div {
+    height: 100%;
+    width: 33.3%;
+    background: linear-gradient(90deg, var(--gold), #f6d98c);
+    border-radius: 9px;
+    transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.wpanel {
+    padding: 32px;
+}
+
+.wpanel.next {
+    animation: inr 0.4s ease;
+}
+
+.wpanel.prev {
+    animation: inl 0.4s ease;
+}
+
+@keyframes inr {
+    from {
+        opacity: 0;
+        transform: translateX(28px);
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+@keyframes inl {
+    from {
+        opacity: 0;
+        transform: translateX(-28px);
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+.wpanel h3,
+.fp h3 {
+    font-size: 1.5rem;
+    margin-bottom: 4px;
+}
+
+.help {
+    color: var(--muted);
+    margin-bottom: 22px;
+}
+
+.fg {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+    max-width: 800px;
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.field.full,
+.acts {
+    grid-column: 1/-1;
+}
+
+.field label {
+    font-weight: 600;
+    font-size: 0.92rem;
+}
+
+.req {
+    color: var(--err);
+}
+
+.field input,
+.field select,
+.field textarea {
+    font: inherit;
+    color: var(--text);
+    background: var(--bg);
+    border: 1.5px solid var(--line);
+    border-radius: 10px;
+    padding: 10px 14px;
+    min-height: 46px;
+    width: 100%;
+    transition:
+        border-color 0.15s,
+        box-shadow 0.15s;
+}
+
+.field textarea {
+    min-height: 100px;
+    resize: vertical;
+}
+
+.field input:focus,
+.field select:focus,
+.field textarea:focus {
+    outline: none;
+    border-color: var(--focus);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--focus) 25%, transparent);
+}
+
+.hint {
+    font-size: 0.82rem;
+    color: var(--muted);
+}
+
+.error {
+    display: none;
+    font-size: 0.85rem;
+    color: var(--err);
+    font-weight: 600;
+}
+
+.field.bad input,
+.field.bad select,
+.field.bad textarea {
+    border-color: var(--err);
+    background: var(--errbg);
+}
+
+.field.bad .error {
+    display: block;
+}
+
+.pw {
+    position: relative;
+}
+
+.pw input {
+    padding-right: 76px;
+}
+
+.pw button {
+    position: absolute;
+    right: 6px;
+    top: 6px;
+    min-height: 34px;
+    border: 0;
+    background: var(--soft);
+    color: var(--text);
+    border-radius: 8px;
+    padding: 0 12px;
+    font: 600 0.8rem var(--bd);
+    cursor: pointer;
+}
+
+.ck {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+}
+
+.ck input {
+    width: 22px;
+    height: 22px;
+    min-height: 0;
+    margin-top: 2px;
+    accent-color: var(--navy2);
+}
+
+.ck label {
+    font-weight: 400;
+}
+
+.acts {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 6px;
+}
+
+.alert {
+    display: none;
+    margin-bottom: 18px;
+    padding: 12px 16px;
+    border-radius: 10px;
+    background: var(--errbg);
+    color: var(--err);
+    font-weight: 600;
+    max-width: 800px;
+}
+
+.alert.show {
+    display: block;
+}
+
+.fp {
+    padding: 32px;
+}
+
+.confirm {
+    padding: 32px;
+    animation: inr 0.5s ease;
+}
+
+.ticket {
+    display: grid;
+    grid-template-columns: 1.1fr 1fr;
+    gap: 28px;
+    background: linear-gradient(135deg, #060f26, #17305f);
+    color: #fff;
+    border-radius: 18px;
+    padding: 28px;
+    border: 1px solid rgba(226, 180, 79, 0.5);
+    --focus: #f0c766;
+}
+
+.ticket .id {
+    font: 600 clamp(1.6rem, 3.6vw, 2.4rem) var(--hd);
+    color: #f0c766;
+    word-break: break-all;
+}
+
+.ticket p {
+    color: #cfdaf0;
+}
+
+.ticket .acts {
+    margin-top: 18px;
+}
+
+.timeline {
+    list-style: none;
+    margin: 0;
+    padding: 0 0 0 6px;
+}
+
+.timeline li {
+    position: relative;
+    padding: 0 0 22px 30px;
+    display: flex;
+    flex-direction: column;
+    color: inherit;
+    opacity: 0.6;
+}
+
+.timeline li:last-child {
+    padding-bottom: 0;
+}
+
+.timeline li::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 4px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    border: 2px solid currentColor;
+}
+
+.timeline li::after {
+    content: "";
+    position: absolute;
+    left: 6px;
+    top: 20px;
+    bottom: -2px;
+    width: 2px;
+    background: currentColor;
+    opacity: 0.35;
+}
+
+.timeline li:last-child::after {
+    display: none;
+}
+
+.timeline li.done,
+.timeline li.cur {
+    opacity: 1;
+}
+
+.timeline li.done::before {
+    background: #4be0a0;
+    border-color: #4be0a0;
+}
+
+.timeline li.cur::before {
+    background: #f0c766;
+    border-color: #f0c766;
+    box-shadow: 0 0 0 5px rgba(240, 199, 102, 0.25);
+}
+
+.timeline span {
+    font-size: 0.86rem;
+    opacity: 0.85;
+}
+
+footer {
+    background: #050c1e;
+    color: #aebcd8;
+    padding: 48px 0;
+    font-size: 0.9rem;
+}
+
+footer strong {
+    display: block;
+    color: #fff;
+    margin-bottom: 6px;
+}
+
+footer .container {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: 24px;
+}
+
+footer .legal {
+    grid-column: 1/-1;
+    border-top: 1px solid rgba(255, 255, 255, 0.14);
+    padding-top: 16px;
+    color: #8d9cb8;
+}
+
+/* ===== Shared app bar (jobseeker + employer views) ===== */
+.appbar {
+    position: sticky;
+    top: 0;
+    z-index: 120;
+    background: linear-gradient(135deg, #050d20, #14295a);
+    color: #fff;
+    --focus: #f0c766;
+    border-bottom: 2px solid var(--gold);
+}
+
+.appbar .container {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 68px;
+    gap: 12px;
+}
+
+.appbar .brand {
+    color: #fff;
+}
+
+.appbar .brand small {
+    color: #b9c6e0;
+}
+
+.tools {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.pill {
+    background: rgba(226, 180, 79, 0.18);
+    border: 1px solid rgba(226, 180, 79, 0.6);
+    color: #f6d98c;
+    border-radius: 99px;
+    padding: 3px 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.bell {
+    position: relative;
+    width: 44px;
+    padding: 0;
+}
+
+.badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    min-width: 20px;
+    height: 20px;
+    border-radius: 99px;
+    background: #e2b44f;
+    color: #0a1630;
+    font: 700 0.72rem/20px var(--bd);
+    text-align: center;
+    padding: 0 5px;
+}
+
+.me {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 4px 12px 4px 4px;
+    border-radius: 99px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.av {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--gold);
+    color: #0a1630;
+    display: grid;
+    place-items: center;
+    font-weight: 700;
+}
+
+.me small {
+    display: block;
+    color: #b9c6e0;
+    font-size: 0.72rem;
+    line-height: 1.1;
+}
+
+.me b {
+    font-size: 0.88rem;
+    line-height: 1.2;
+}
+
+.pop {
+    position: absolute;
+    right: 20px;
+    top: 72px;
+    width: min(360px, calc(100% - 40px));
+    background: var(--card);
+    color: var(--text);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+    padding: 16px;
+    z-index: 130;
+    --focus: #1d4fa8;
+}
+
+[data-theme="dark"] .pop {
+    --focus: #f0c766;
+}
+
+.pop h2 {
+    font-size: 1.2rem;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.pop ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 8px;
+}
+
+.pop li {
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: var(--soft);
+    font-size: 0.9rem;
+    border-left: 4px solid transparent;
+}
+
+.pop li.new {
+    border-left-color: var(--gold);
+    background: var(--goldbg);
+}
+
+.pop time {
+    display: block;
+    font-size: 0.76rem;
+    color: var(--muted);
+}
+
+.link {
+    background: none;
+    border: 0;
+    color: var(--focus);
+    font: 600 0.84rem var(--bd);
+    cursor: pointer;
+    text-decoration: underline;
+    min-height: 32px;
+}
+
+.vin {
+    animation: fade 0.35s ease;
+}
+
+@keyframes fade {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+.sr {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+}
+
+/* ===== Jobseeker dashboard ===== */
+.banner {
+    background:
+        radial-gradient(800px 400px at 90% 0,
+            rgba(226, 180, 79, 0.25),
+            transparent 60%),
+        linear-gradient(135deg, #040b1d, #0f2347 60%, #1b3a70);
+    color: #fff;
+    --focus: #f0c766;
+    padding: 44px 0 52px;
+}
+
+.bgrid {
+    display: grid;
+    grid-template-columns: 1.1fr 1fr;
+    gap: 32px;
+    align-items: start;
+}
+
+.banner h1 {
+    font-size: clamp(2rem, 4.4vw, 3.2rem);
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.banner .sub {
+    color: #d3ddf0;
+    max-width: 48ch;
+}
+
+.stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-top: 24px;
+}
+
+.stats div {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 14px;
+    padding: 14px;
+}
+
+.stats b {
+    display: block;
+    font: 600 2rem/1 var(--hd);
+    color: #f0c766;
+}
+
+.stats span {
+    font-size: 0.82rem;
+    color: #cbd7ee;
+}
+
+.track {
+    background: rgba(5, 12, 28, 0.45);
+    border: 1px solid rgba(226, 180, 79, 0.5);
+    border-radius: 18px;
+    padding: 22px;
+}
+
+.track h2 {
+    font: 600 1rem var(--bd);
+    margin-bottom: 4px;
+}
+
+.tid {
+    color: #f0c766;
+    font: 600 1.5rem var(--hd);
+    margin-bottom: 16px;
+    word-break: break-all;
+}
+
+#jsMain,
+#emMain {
+    outline: none;
+}
+
+#jsMain {
+    padding-block: 48px 80px;
+}
+
+.jh {
+    margin-bottom: 22px;
+}
+
+.jh h2 {
+    font-size: clamp(1.7rem, 3vw, 2.3rem);
+    margin-bottom: 6px;
+}
+
+.jh p {
+    color: var(--muted);
+}
+
+.jbar {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 14px;
+    margin-bottom: 14px;
+}
+
+.fchips {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+}
+
+.fchips button {
+    font: 600 0.88rem var(--bd);
+    min-height: 40px;
+    padding: 0 16px;
+    border-radius: 99px;
+    border: 1.5px solid var(--line);
+    background: var(--card);
+    color: var(--muted);
+    cursor: pointer;
+}
+
+.fchips button[aria-pressed="true"] {
+    background: var(--btn);
+    color: var(--btnfg);
+    border-color: var(--btn);
+}
+
+.count {
+    color: var(--muted);
+    font-size: 0.9rem;
+    margin-bottom: 16px;
+}
+
+.jgrid {
+    display: grid;
+    gap: 20px;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+}
+
+.jc {
+    display: flex;
+    flex-direction: column;
+}
+
+.tags {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.tag.r {
+    background: var(--soft);
+    color: var(--text);
+}
+
+.cname {
+    color: var(--muted);
+    font-weight: 500;
+    font-size: 0.92rem;
+}
+
+.meta {
+    margin: 10px 0;
+    font-size: 0.88rem;
+    color: var(--muted);
+    display: flex;
+    gap: 4px 16px;
+    flex-wrap: wrap;
+}
+
+.pay {
+    font: 600 1.15rem var(--hd);
+    color: var(--goldtx);
+}
+
+.det {
+    margin: 10px 0 0;
+    font-size: 0.9rem;
+    color: var(--muted);
+    padding: 12px;
+    border-radius: 10px;
+    background: var(--soft);
+}
+
+.det ul {
+    margin: 6px 0 0;
+    padding-left: 18px;
+}
+
+.row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: auto;
+    padding-top: 16px;
+}
+
+.row .btn {
+    flex: 1;
+    min-width: 110px;
+}
+
+.sum {
+    background: var(--soft);
+    border-radius: 12px;
+    padding: 14px;
+    margin: 14px 0;
+}
+
+.resume {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    align-items: center;
+    border: 1.5px dashed var(--line);
+    border-radius: 12px;
+    padding: 12px 14px;
+    margin-bottom: 6px;
+}
+
+.resume.bad {
+    border-color: var(--err);
+    background: var(--errbg);
+}
+
+.err {
+    color: var(--err);
+    font-weight: 600;
+    font-size: 0.86rem;
+    min-height: 1.3em;
+}
+
+.dlg .ck {
+    margin: 12px 0;
+}
+
+.dlg .acts {
+    justify-content: flex-end;
+}
+
+/* ===== Employer command center ===== */
+#emMain {
+    padding-bottom: 80px;
+}
+
+.hd {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin: 36px 0 22px;
+}
+
+.hd h1 {
+    font-size: clamp(1.9rem, 4vw, 2.8rem);
+}
+
+.hd p {
+    color: var(--muted);
+}
+
+.estats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-bottom: 26px;
+}
+
+.stat {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-top: 3px solid var(--gold);
+    border-radius: 14px;
+    padding: 16px;
+    box-shadow: var(--sh);
+}
+
+.stat b {
+    display: block;
+    font: 600 2rem/1.1 var(--hd);
+}
+
+.stat span {
+    color: var(--muted);
+    font-size: 0.86rem;
+}
+
+.mtabs {
+    display: flex;
+    max-width: 100%;
+    overflow-x: auto;
+}
+
+.mtabs button {
+    white-space: nowrap;
+}
+
+#emView .card {
+    margin-bottom: 20px;
+    border-radius: 14px;
+    padding: 22px;
+}
+
+#emView .card:hover {
+    transform: none;
+    border-color: var(--line);
+}
+
+#emView .card h2 {
+    font-size: 1.4rem;
+    margin-bottom: 12px;
+}
+
+.tw {
+    overflow-x: auto;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 720px;
+    font-size: 0.92rem;
+}
+
+th,
+td {
+    text-align: left;
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--line);
+    vertical-align: middle;
+}
+
+th {
+    background: var(--soft);
+    font-size: 0.8rem;
+    color: var(--muted);
+    font-weight: 600;
+}
+
+tr:last-child td {
+    border-bottom: 0;
+}
+
+td small {
+    display: block;
+    color: var(--muted);
+}
+
+.b {
+    display: inline-block;
+    font-size: 0.76rem;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 99px;
+    white-space: nowrap;
+}
+
+.b.Active,
+.b.Shortlisted {
+    background: var(--okbg);
+    color: var(--ok);
+}
+
+.b.Pending,
+.b.New {
+    background: var(--goldbg);
+    color: var(--goldtx);
+}
+
+.b.Closed,
+.b.Rejected {
+    background: var(--errbg);
+    color: var(--err);
+}
+
+.b.Interview {
+    background: var(--soft);
+    color: var(--text);
+    border: 1px solid var(--focus);
+}
+
+.btn.sm {
+    min-height: 36px;
+    padding: 4px 12px;
+    font-size: 0.84rem;
+}
+
+.ra {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.fbar {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+}
+
+.fbar .field {
+    min-width: 200px;
+    flex: 1;
+}
+
+.egrid {
+    display: grid;
+    gap: 16px;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+}
+
+.efair {
+    border-left: 4px solid var(--gold);
+    background: var(--soft);
+    border-radius: 12px;
+    padding: 16px;
+}
+
+.efair time {
+    font: 600 0.86rem var(--bd);
+    color: var(--goldtx);
+}
+
+.efair h3 {
+    font-size: 1.15rem;
+    margin: 4px 0 6px;
+}
+
+.efair p {
+    font-size: 0.9rem;
+    color: var(--muted);
+    margin-bottom: 10px;
+}
+
+.empty {
+    padding: 28px;
+    text-align: center;
+    color: var(--muted);
+}
+
+#applyDlg {
+    width: min(520px, calc(100% - 24px));
+}
+
+#dJ,
+#dI {
+    width: min(600px, calc(100% - 24px));
+}
+
+dialog {
+    max-height: calc(100vh - 24px);
+}
+
+@media (max-width: 900px) {
+    .bgrid {
+        grid-template-columns: 1fr;
+    }
+
+    .me div {
+        display: none;
+    }
+
+    .me {
+        padding: 4px;
+    }
+
+    .estats {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+@media (max-width: 640px) {
+    .jbar {
+        grid-template-columns: 1fr;
+    }
+
+    .stats {
+        gap: 8px;
+    }
+
+    .stats b {
+        font-size: 1.5rem;
+    }
+
+    .appbar .brand strong,
+    .appbar .brand small,
+    .pill {
+        display: none;
+    }
+
+    .btn-glass .lbl {
+        display: none;
+    }
+
+    .dlg {
+        padding: 22px 18px;
+    }
+
+    #jsMain {
+        padding-block: 36px 60px;
+    }
+
+    #emView .card {
+        padding: 16px;
+    }
+
+    .tools {
+        gap: 6px;
+    }
+}
+
+dialog {
+    border: 0;
+    border-radius: 20px;
+    padding: 0;
+    width: min(440px, calc(100% - 24px));
+    background: var(--card);
+    color: var(--text);
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5);
+}
+
+dialog::backdrop {
+    background: rgba(5, 12, 28, 0.7);
+    backdrop-filter: blur(4px);
+}
+
+.dlg {
+    padding: 28px;
+    border-top: 5px solid var(--gold);
+    border-radius: 20px;
+    position: relative;
+}
+
+.dlg h2 {
+    font-size: 1.7rem;
+    margin-bottom: 14px;
+}
+
+.x {
+    position: absolute;
+    right: 12px;
+    top: 14px;
+    width: 44px;
+    height: 44px;
+    border: 0;
+    background: none;
+    color: var(--muted);
+    font-size: 1.6rem;
+    cursor: pointer;
+}
+
+.dlg form {
+    display: grid;
+    gap: 16px;
+}
+
+.dlg .alt2 {
+    margin-top: 16px;
+    font-size: 0.92rem;
+    color: var(--muted);
+}
+
+#toasts {
+    position: fixed;
+    right: 16px;
+    bottom: 16px;
+    z-index: 2000;
+    display: grid;
+    gap: 10px;
+    width: min(380px, calc(100% - 32px));
+}
+
+.toast {
+    display: flex;
+    gap: 12px;
+    justify-content: space-between;
+    align-items: flex-start;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-left: 5px solid var(--ok);
+    border-radius: 12px;
+    padding: 14px 14px 14px 16px;
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.28);
+    animation: tin 0.35s ease;
+}
+
+.toast.err {
+    border-left-color: var(--err);
+}
+
+.toast.out {
+    opacity: 0;
+    transform: translateX(20px);
+    transition: 0.25s;
+}
+
+.toast button {
+    background: none;
+    border: 0;
+    color: var(--muted);
+    font-size: 1.3rem;
+    cursor: pointer;
+    min-width: 32px;
+    min-height: 32px;
+}
+
+@keyframes tin {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+@media (max-width: 900px) {
+
+    .hero-grid,
+    .ticket,
+    footer .container {
+        grid-template-columns: 1fr;
+    }
+
+    .toggle {
+        display: block;
+    }
+
+    .links {
+        position: fixed;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        width: min(86vw, 340px);
+        flex-direction: column;
+        align-items: stretch;
+        gap: 6px;
+        background: var(--card);
+        padding: 84px 20px 24px;
+        transform: translateX(100%);
+        visibility: hidden;
+        transition:
+            transform 0.3s,
+            visibility 0.3s;
+        z-index: 130;
+        box-shadow: -20px 0 60px rgba(0, 0, 0, 0.35);
+    }
+
+    .links.open {
+        transform: none;
+        visibility: visible;
+    }
+
+    .links a.l {
+        padding: 14px 12px;
+        border-bottom: 1px solid var(--line);
+    }
+}
+
+@media (max-width: 640px) {
+    .fg {
+        grid-template-columns: 1fr;
+    }
+
+    .wsteps {
+        grid-template-columns: 1fr;
+    }
+
+    .wsteps li:not(.on) {
+        display: none;
+    }
+
+    .wpanel,
+    .fp,
+    .confirm {
+        padding: 24px 18px;
+    }
+
+    .block {
+        padding: 60px 0;
+    }
+
+    .hero {
+        padding: 56px 0 48px;
+    }
+
+    .ticker h2 {
+        display: none;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    *,
+    *::before,
+    *::after {
+        animation: none !important;
+        transition: none !important;
+        scroll-behavior: auto !important;
+    }
+
+    .tk {
+        overflow-x: auto;
+    }
+}
+
+
+
+=== FILE: ./nav_public.php ===
+<a href="#main" class="skip">Skip to main content</a>
+<div class="notice">
+  <div class="container">
+    <span>All PESO services are free. Never pay a fee to anyone claiming to process your application.</span>
+    <button type="button" aria-label="Dismiss notice">×</button>
+  </div>
+</div>
+<header class="nav">
+  <div class="container">
+    <a href="peso-portal.html" class="brand">
+      <span class="mark">PESO</span>
+      <span>
+        <strong>PESO Online</strong>
+        <small>Public Employment Service Office</small>
+      </span>
+    </a>
+    <nav class="links" id="primaryNav">
+      <a href="peso-portal.html#trends" class="l">Market trends</a>
+      <a href="peso-portal.html#services" class="l">Services</a>
+      <a href="peso-portal.html#programs" class="l">Programs</a>
+      <a href="peso-portal.html#join" class="l">Create account</a>
+      <button type="button" class="btn btn-line" onclick="document.getElementById('loginDlg').showModal()">Log in</button>
+    </nav>
+    <button class="toggle" aria-expanded="false" aria-controls="primaryNav">
+      <i></i>
+    </button>
+  </div>
+</header>
+<div class="scrim" id="scrim"></div>
+<main id="main">
+
+
+=== FILE: ./logout.php ===
+<?php // logout.php
+require_once __DIR__ . '/db.php';
+$_SESSION = [];
+session_destroy();
+header('Location: peso-portal.html');
+exit;
+
+
+=== FILE: ./dashboard.php ===
+<?php
+require_once __DIR__ . '/db.php';
+
+// Security: Redirect if not logged in
+if (empty($_SESSION['user_id'])) {
+    header('Location: peso-portal.html');
+    exit;
+}
+
+// Set page title and determine role
+$pageTitle = 'Dashboard';
+$isEm = ($_SESSION['role'] ?? '') === 'employer';
+$name = htmlspecialchars($_SESSION['name'] ?? 'User', ENT_QUOTES, 'UTF-8');
+$trackingId = htmlspecialchars($_SESSION['tracking_id'] ?? '', ENT_QUOTES, 'UTF-8');
+
+// 1. Include the top HTML, CSS link, and Logged-in Navigation
+require_once __DIR__ . '/header.php';
+require_once __DIR__ . '/appbar.php'; 
+?>
+
+<!-- ================= TOP BANNER ================= -->
+<section class="banner">
+  <div class="container">
+    <div class="bgrid">
+      <div>
+        <h1><?= $isEm ? 'Recruiter command center' : 'Your job dashboard' ?></h1>
+        <p class="sub">Signed in as <?= $name ?>. 
+          <?= ($_SESSION['status'] ?? '') === 'pending' 
+              ? 'Your employer account is awaiting PESO verification.' 
+              : 'Your account is active.' ?></p>
+      </div>
+      <div class="track">
+        <h2>Tracking ID</h2>
+        <p class="tid"><?= $trackingId ?></p>
+        <div class="stats">
+          <div><b>0</b><span><?= $isEm ? 'Active postings' : 'Saved jobs' ?></span></div>
+          <div><b>0</b><span><?= $isEm ? 'Total applicants' : 'Active applications' ?></span></div>
+          <div><b>0</b><span>Interviews</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= MAIN DASHBOARD CONTENT ================= -->
+<?php if ($isEm): ?>
+  <!-- ============ EMPLOYER VIEW ============ -->
+  <main id="emMain">
+    <div class="container">
+      <div class="hd">
+        <div>
+          <h1>Manage your hiring</h1>
+          <p>Post vacancies, review applicants, and request PESO hiring support.</p>
+        </div>
+        <button class="btn btn-gold" id="btnPost">+ Post a new vacancy</button>
+      </div>
+
+      <div class="estats">
+        <div class="stat"><b>0</b><span>Active postings</span></div>
+        <div class="stat"><b>0</b><span>Pending approval</span></div>
+        <div class="stat"><b>0</b><span>Total applicants</span></div>
+        <div class="stat"><b>0</b><span>Interviews scheduled</span></div>
+      </div>
+
+      <div class="card">
+        <div class="mtabs tabs" role="tablist">
+          <button role="tab" aria-selected="true">Job postings</button>
+          <button role="tab" aria-selected="false">Applicants</button>
+          <button role="tab" aria-selected="false">Hiring assistance</button>
+        </div>
+
+        <h2>Your job postings</h2>
+        <div class="tw">
+          <table>
+            <thead>
+              <tr><th>Position</th><th>Location</th><th>Pay</th><th>Slots</th><th>Applicants</th><th>Status</th><th>Action</th></tr>
+            </thead>
+            <tbody id="postingsBody">
+              <tr><td colspan="7" class="empty">You haven't posted any vacancies yet.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Applicants</h2>
+        <div class="fbar">
+          <div class="field">
+            <label for="fPosting">Posting</label>
+            <select id="fPosting"><option>All postings</option></select>
+          </div>
+          <div class="field">
+            <label for="fStatus">Status</label>
+            <select id="fStatus">
+              <option>All statuses</option><option>New</option><option>Shortlisted</option><option>Interview</option><option>Rejected</option>
+            </select>
+          </div>
+        </div>
+        <div class="tw">
+          <table>
+            <thead>
+              <tr><th>Applicant</th><th>Applied for</th><th>Resume</th><th>Status</th><th>Actions</th></tr>
+            </thead>
+            <tbody id="applicantsBody">
+              <tr><td colspan="5" class="empty">No applicants yet.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Upcoming PESO events</h2>
+        <div class="egrid">
+          <div class="efair">
+            <time>Sat, Nov 14, 2026</time>
+            <h3>Mega Job Fair</h3>
+            <p>Booths for verified employers. On-the-spot interviews.</p>
+            <button class="btn btn-line btn-sm">Reserve a booth</button>
+          </div>
+          <div class="efair">
+            <time>Sat, Jan 16, 2027</time>
+            <h3>Youth and Special Placements Fair</h3>
+            <p>Inclusive hiring for students, PWDs and returning workers.</p>
+            <button class="btn btn-line btn-sm">Join this fair</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+<?php else: ?>
+  <!-- ============ JOBSEEKER VIEW ============ -->
+  <main id="jsMain">
+    <div class="container">
+      <div class="jh">
+        <h2>Job offers</h2>
+        <p>Verified vacancies from employers in your area. Pay is in Philippine pesos (₱).</p>
+      </div>
+      
+      <div class="jbar">
+        <div class="field">
+          <label for="jSearch">Search jobs</label>
+          <input id="jSearch" type="search" placeholder="Title, skill or company">
+        </div>
+        <div class="field">
+          <label for="jLoc">Location</label>
+          <input id="jLoc" type="text" placeholder="City or barangay">
+        </div>
+      </div>
+
+      <div class="fchips" role="group" aria-label="Filters">
+        <button type="button" aria-pressed="true">All</button>
+        <button type="button" aria-pressed="false">Full-time</button>
+        <button type="button" aria-pressed="false">Part-time</button>
+        <button type="button" aria-pressed="false">No experience</button>
+        <button type="button" aria-pressed="false">Remote</button>
+      </div>
+
+      <p class="count"><span id="jCount">0</span> jobs found</p>
+      
+      <div class="jgrid" id="jGrid">
+        <!-- Sample Job Card to demonstrate CSS styling -->
+        <article class="card jc">
+          <div class="tags"><span class="tag">Full-time</span><span class="tag r">Urgent</span></div>
+          <h3>Customer Service Representative</h3>
+          <p class="cname">Sample BPO Corp.</p>
+          <div class="meta"><span>📍 Cagayan de Oro</span><span>💼 1-2 yrs exp</span></div>
+          <p class="pay">₱18,000 - ₱22,000</p>
+          <div class="row">
+            <button class="btn btn-p">Apply</button>
+            <button class="btn btn-line">Save</button>
+          </div>
+        </article>
+        
+        <article class="card jc">
+          <div class="tags"><span class="tag">Part-time</span></div>
+          <h3>Administrative Assistant</h3>
+          <p class="cname">Local Government Unit</p>
+          <div class="meta"><span>📍 Downtown</span><span>💼 Entry level</span></div>
+          <p class="pay">₱12,000</p>
+          <div class="row">
+            <button class="btn btn-p">Apply</button>
+            <button class="btn btn-line">Save</button>
+          </div>
+        </article>
+      </div>
+    </div>
+  </main>
+<?php endif; ?>
+
+<?php 
+// 2. Include the footer, login dialog, and JS files
+require_once __DIR__ . '/footer.php'; 
+?>
+
+
+=== FILE: ./login.php ===
+<?php // login.php
+declare(strict_types=1);
+require_once __DIR__ . '/db.php';
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') { header('Location: peso-portal.html'); exit; }
+
+$email = mb_strtolower(trim((string)($_POST['email'] ?? '')));
+$pass  = (string)($_POST['password'] ?? '');
+
+$stmt = $pdo->prepare('SELECT * FROM users WHERE email = ? LIMIT 1');
+$stmt->execute([$email]);
+$u = $stmt->fetch();
+
+// Verify credentials only (role is no longer checked against a form input)
+if (!$u || !password_verify($pass, $u['password_hash'])) {
+    http_response_code(401);
+    echo '<!doctype html><meta charset="utf-8"><link rel="stylesheet" href="css/styles.css">'
+        . '<section class="block"><div class="container"><div class="shell"><div class="wpanel">'
+        . '<h3>Log in failed</h3><p class="help">Wrong email or password.</p>'
+        . '<div class="acts"><a class="btn btn-p" href="peso-portal.html">Back</a></div>'
+        . '</div></div></div></section>';
+    exit;
+}
+
+// Automatically use the role stored in the database
+$role = $u['role'];
+
+session_regenerate_id(true);
+$_SESSION['user_id']     = (int)$u['id'];
+$_SESSION['role']        = $role;
+$_SESSION['name']        = $u['first_name'] . ' ' . $u['last_name'];
+$_SESSION['tracking_id'] = $u['tracking_id'];
+$_SESSION['status']      = $u['status'];
+
+header('Location: dashboard.php');
+exit;
+
+
+=== FILE: ./footer.php ===
+</main>
+<footer>
+	<div class="container">
+		<div>
+			<strong>Public Employment Service Office</strong>
+			Free employment assistance for jobseekers and employers, supervised by the Department of Labor and Employment (DOLE).
+		</div>
+		<div>
+			<strong>Office hours</strong>
+			Monday to Friday, 8:00 AM to 5:00 PM
+		</div>
+		<div class="legal">
+			Personal data is processed under the Data Privacy Act of 2012 (RA 10173). © <?= date('Y') ?> PESO.
+		</div>
+	</div>
+</footer>
+
+<!-- Unified Login Dialog -->
+<dialog id="loginDlg">
+	<div class="dlg">
+		<button class="x" type="button" data-close aria-label="Close">×</button>
+		<h2>Log in</h2>
+		<form action="login.php" method="post">
+			<div class="field">
+				<label for="loginEmail">Email address</label>
+				<input id="loginEmail" name="email" type="email" autocomplete="email" required>
+			</div>
+			<div class="field">
+				<label for="loginPassword">Password</label>
+				<div class="pw">
+					<input id="loginPassword" name="password" type="password" autocomplete="current-password" required>
+					<button type="button" data-toggle-pw="loginPassword">Show</button>
+				</div>
+			</div>
+			<div class="acts">
+				<button type="submit" class="btn btn-p">Log in</button>
+			</div>
+		</form>
+		<p class="alt2">No account yet? <a href="peso-portal.html#join" data-close>Create one</a></p>
+	</div>
+</dialog>
+
+<!-- Link your JS files here so they load on every page -->
+<script src="js/script.js" defer></script>
+<script src="js/auth.js" defer></script>
+</body>
+</html>
+
+
+=== FILE: ./peso-portal.html ===
+<!doctype html>
+<html lang="en" data-theme="light">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Public Employment Service Office</title>
+  <meta name="description"
+    content="Free employment facilitation, training referrals and labor market information for jobseekers and employers." />
+  <meta name="color-scheme" content="light dark" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600;6..72,700&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+
+<body>
+  <a class="skip" id="skip" href="#main">Skip to main content</a>
+  <div id="toasts" aria-live="polite"></div>
+  <div id="landing">
+    <div class="notice" id="notice">
+      <div class="container">
+        <span>All PESO services are free. Never pay a fee to anyone claiming to process your application.</span>
+        <button type="button" id="noticeX" aria-label="Dismiss notice">×</button>
+      </div>
+    </div>
+    <header class="nav">
+      <div class="container">
+        <a class="brand" href="#top" aria-label="Public Employment Service Office, home">
+          <span class="mark" aria-hidden="true">PESO</span>
+          <span>
+            <strong>Public Employment Service Office</strong>
+            <small>Department of Labor and Employment</small>
+          </span>
+        </a>
+        <button class="toggle" id="navToggle" type="button" aria-expanded="false" aria-controls="navLinks"
+          aria-label="Open menu">
+          <i></i>
+        </button>
+        <nav class="links" id="navLinks" aria-label="Main">
+          <a class="l" href="#trends">Market trends</a>
+          <a class="l" href="#services">Services</a>
+          <a class="l" href="#programs">Programs</a>
+          <a class="l" href="#join">Create account</a>
+          <button class="btn btn-line themeBtn" type="button">Dark mode</button>
+          <!-- Updated to open dialog directly -->
+          <button class="btn btn-line" type="button" onclick="document.getElementById('loginDlg').showModal()">Log
+            in</button>
+          <a class="btn btn-gold" href="#join" data-join="jobseeker">Register</a>
+        </nav>
+      </div>
+    </header>
+    <div class="scrim" id="scrim"></div>
+    <main id="main">
+      <span id="top"></span>
+      <section class="hero" aria-labelledby="h1">
+        <svg class="sun" id="sun" viewBox="-200 -200 400 400" aria-hidden="true" fill="none" stroke="#e2b44f"
+          stroke-width="2">
+          <circle r="52" />
+          <circle r="64" stroke-width="1" />
+        </svg>
+        <div class="container hero-grid">
+          <div>
+            <h1 id="h1">Work starts here. Free, fair and close to home.</h1>
+            <p class="lead">PESO connects residents, employers and training providers through a free public employment
+              service. Log in to see current job offers.</p>
+            <div class="cta">
+              <a class="btn btn-gold" href="#join" data-role-link="jobseeker">I'm looking for work</a>
+              <a class="btn btn-glass" href="#join" data-role-link="employer">I'm hiring</a>
+              <!-- Updated to open dialog directly -->
+              <button class="btn btn-glass" type="button" onclick="document.getElementById('loginDlg').showModal()">Log
+                in</button>
+            </div>
+            <ul class="badges">
+              <li>100% free service</li>
+              <li>Verified employers</li>
+              <li>Supervised by DOLE</li>
+            </ul>
+          </div>
+          <aside class="live" aria-labelledby="liveT">
+            <h2 id="liveT"><span class="dot" aria-hidden="true"></span>Live from the registry</h2>
+            <div class="nums">
+              <div><b id="cVac" data-count="1248">0</b><span>Open vacancies</span></div>
+              <div><b data-count="18460">0</b><span>Registered jobseekers</span></div>
+              <div><b data-count="326">0</b><span>Verified employers</span></div>
+              <div><b data-count="4912">0</b><span>Placed this year</span></div>
+            </div>
+            <small id="upd">Sample figures for demonstration.</small>
+          </aside>
+        </div>
+      </section>
+
+      <section class="ticker" aria-label="In-demand skills for 2026">
+        <h2>In demand, 2026</h2>
+        <div class="tk" id="tk">
+          <div class="tk-in" id="tkIn"></div>
+        </div>
+        <button type="button" id="tkBtn" aria-pressed="false">Pause</button>
+      </section>
+
+      <section class="block" id="trends" aria-labelledby="tT">
+        <div class="container">
+          <div class="sh">
+            <h2 id="tT">Upcoming job fairs and notices</h2>
+            <p>
+              On-the-spot interviews with verified employers. Bring printed
+              copies of your resume and a valid ID.
+            </p>
+          </div>
+          <div class="grid">
+            <article class="card fair">
+              <time datetime="2026-11-14">Sat, Nov 14, 2026</time>
+              <h3>Mega Job Fair</h3>
+              <p>
+                Over 80 employers hiring in BPO, manufacturing and retail.
+                Registered jobseekers get priority queueing.
+              </p>
+            </article>
+            <article class="card fair">
+              <time datetime="2026-12-03">Thu, Dec 3, 2026</time>
+              <h3>Skills and Scholarship Day</h3>
+              <p>
+                Apply for funded technical and digital training slots and meet
+                accredited schools.
+              </p>
+            </article>
+            <article class="card fair">
+              <time datetime="2027-01-16">Sat, Jan 16, 2027</time>
+              <h3>Youth and Special Placements Fair</h3>
+              <p>
+                Inclusive hiring for students, persons with disabilities and
+                returning workers.
+              </p>
+            </article>
+          </div>
+          <p class="note">
+            Dates, venues and skill-demand figures are sample entries.
+          </p>
+        </div>
+      </section>
+
+      <section class="block alt" id="services" aria-labelledby="sT">
+        <div class="container">
+          <div class="sh">
+            <h2 id="sT">Six services, no cost to you</h2>
+            <p>Open to every resident and registered employer.</p>
+          </div>
+          <div class="grid">
+            <article class="card">
+              <div class="ic" aria-hidden="true">🤝</div>
+              <h3>Employment facilitation</h3>
+              <p>We match qualified applicants with verified employers.</p>
+            </article>
+            <article class="card">
+              <div class="ic" aria-hidden="true">🧭</div>
+              <h3>Career coaching</h3>
+              <p>Resume help and interview practice, one on one.</p>
+            </article>
+            <article class="card">
+              <div class="ic" aria-hidden="true">📋</div>
+              <h3>Skills assessment</h3>
+              <p>
+                Find the fields and growth paths that suit your competencies.
+              </p>
+            </article>
+            <article class="card">
+              <div class="ic" aria-hidden="true">🎓</div>
+              <h3>Training coordination</h3>
+              <p>Referral to accredited schools for technical courses.</p>
+            </article>
+            <article class="card">
+              <div class="ic" aria-hidden="true">📊</div>
+              <h3>Labor market information</h3>
+              <p>
+                Data on hiring industries, in-demand skills and local trends.
+              </p>
+            </article>
+            <article class="card">
+              <div class="ic" aria-hidden="true">🏪</div>
+              <h3>Entrepreneurship preparation</h3>
+              <p>
+                Practical guidance for community-based livelihood ventures.
+              </p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="block" id="programs" aria-labelledby="pT">
+        <div class="container">
+          <div class="sh">
+            <h2 id="pT">Programs that open doors</h2>
+          </div>
+          <div class="grid">
+            <article class="card">
+              <span class="tag">Hiring event</span>
+              <h3>Mega job fairs</h3>
+              <p>
+                Many verified employers in one venue, with fast-tracked
+                hiring.
+              </p>
+            </article>
+            <article class="card">
+              <span class="tag">Youth</span>
+              <h3>Youth employment</h3>
+              <p>
+                Short-term work during school breaks to build early
+                experience.
+              </p>
+            </article>
+            <article class="card">
+              <span class="tag">Crisis response</span>
+              <h3>Emergency livelihood</h3>
+              <p>
+                Short-term community work for displaced and seasonal workers.
+              </p>
+            </article>
+            <article class="card">
+              <span class="tag">Training</span>
+              <h3>Skills scholarships</h3>
+              <p>Funded slots in technical, mechanical and digital skills.</p>
+            </article>
+            <article class="card">
+              <span class="tag">Inclusive</span>
+              <h3>Special local placements</h3>
+              <p>
+                For persons with disabilities, senior citizens and returning
+                migrant workers.
+              </p>
+            </article>
+            <article class="card">
+              <span class="tag">Job readiness</span>
+              <h3>Work appreciation seminars</h3>
+              <p>
+                Workplace conduct, ethics and soft skills before you start.
+              </p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="block alt" id="join">
+        <div class="container">
+          <div class="sh">
+            <h2>Create your account</h2>
+            <p>
+              Registering unlocks job offers. Required fields are marked with
+              an asterisk (<span class="req">*</span>). All PESO services are
+              free.
+            </p>
+          </div>
+
+          <div class="tabs" role="tablist" aria-label="Account type">
+            <button type="button" role="tab" aria-selected="true" data-role="jobseeker">
+              Jobseeker
+            </button>
+            <button type="button" role="tab" aria-selected="false" data-role="employer">
+              Employer or recruiter
+            </button>
+          </div>
+
+          <div class="shell">
+            <form id="joinForm" action="register.php" method="post" enctype="multipart/form-data" novalidate>
+              <!-- tells PHP which table to branch into -->
+              <input type="hidden" name="role" id="roleInput" value="jobseeker" />
+
+              <div class="whead" id="wizHead">
+                <ol class="wsteps" id="wizSteps">
+                  <li class="on"><i>1</i>Account and profile</li>
+                  <li><i>2</i>Skills and resume</li>
+                  <li><i>3</i>Job preferences</li>
+                </ol>
+                <div class="bar">
+                  <div id="wizBar" style="width: 33.3%"></div>
+                </div>
+              </div>
+
+              <!-- ============ STEP 1 : shared + role-specific ============ -->
+              <div class="wpanel" data-step="1">
+                <h3>Account and profile</h3>
+                <p class="help">
+                  Use an email address you check often. PESO will send your
+                  tracking ID and verification updates there.
+                </p>
+
+                <div class="alert" id="formAlert" role="alert"></div>
+
+                <div class="fg">
+                  <div class="field">
+                    <label for="first_name">First name <span class="req">*</span></label>
+                    <input id="first_name" name="first_name" type="text" autocomplete="given-name" required />
+                    <span class="error">Please enter your first name.</span>
+                  </div>
+
+                  <div class="field">
+                    <label for="last_name">Last name <span class="req">*</span></label>
+                    <input id="last_name" name="last_name" type="text" autocomplete="family-name" required />
+                    <span class="error">Please enter your last name.</span>
+                  </div>
+
+                  <div class="field">
+                    <label for="email">Email address <span class="req">*</span></label>
+                    <input id="email" name="email" type="email" autocomplete="email" required />
+                    <span class="error">Please enter a valid email address.</span>
+                  </div>
+
+                  <div class="field">
+                    <label for="mobile">Mobile number <span class="req">*</span></label>
+                    <input id="mobile" name="mobile" type="tel" inputmode="tel" placeholder="09XX XXX XXXX"
+                      autocomplete="tel" required />
+                    <span class="error">Please enter a valid mobile number.</span>
+                  </div>
+
+                  <div class="field">
+                    <label for="password">Password <span class="req">*</span></label>
+                    <div class="pw">
+                      <input id="password" name="password" type="password" minlength="8" autocomplete="new-password"
+                        required />
+                      <button type="button" data-toggle-pw="password">
+                        Show
+                      </button>
+                    </div>
+                    <span class="hint">At least 8 characters.</span>
+                    <span class="error">Password must be at least 8 characters.</span>
+                  </div>
+
+                  <div class="field">
+                    <label for="confirm_password">Confirm password <span class="req">*</span></label>
+                    <div class="pw">
+                      <input id="confirm_password" name="confirm_password" type="password" minlength="8"
+                        autocomplete="new-password" required />
+                      <button type="button" data-toggle-pw="confirm_password">
+                        Show
+                      </button>
+                    </div>
+                    <span class="error">Passwords do not match.</span>
+                  </div>
+
+                  <!-- ---- jobseeker only ---- -->
+                  <div class="field" data-role-only="jobseeker">
+                    <label for="birthdate">Date of birth <span class="req">*</span></label>
+                    <input id="birthdate" name="birthdate" type="date" required />
+                    <span class="error">Please enter your date of birth.</span>
+                  </div>
+
+                  <div class="field" data-role-only="jobseeker">
+                    <label for="sex">Sex <span class="req">*</span></label>
+                    <select id="sex" name="sex" required>
+                      <option value="">Select…</option>
+                      <option value="female">Female</option>
+                      <option value="male">Male</option>
+                      <option value="undisclosed">Prefer not to say</option>
+                    </select>
+                    <span class="error">Please select an option.</span>
+                  </div>
+
+                  <div class="field" data-role-only="jobseeker">
+                    <label for="barangay">Barangay <span class="req">*</span></label>
+                    <input id="barangay" name="barangay" type="text" required />
+                    <span class="error">Please enter your barangay.</span>
+                  </div>
+
+                  <div class="field" data-role-only="jobseeker">
+                    <label for="city">City or municipality <span class="req">*</span></label>
+                    <input id="city" name="city" type="text" required />
+                    <span class="error">Please enter your city or municipality.</span>
+                  </div>
+
+                  <!-- ---- employer only ---- -->
+                  <div class="field" data-role-only="employer" hidden>
+                    <label for="company_name">Company or establishment
+                      <span class="req">*</span></label>
+                    <input id="company_name" name="company_name" type="text" autocomplete="organization" required />
+                    <span class="error">Please enter your company name.</span>
+                  </div>
+
+                  <div class="field" data-role-only="employer" hidden>
+                    <label for="industry">Industry <span class="req">*</span></label>
+                    <select id="industry" name="industry" required>
+                      <option value="">Select…</option>
+                      <option>BPO</option>
+                      <option>Manufacturing</option>
+                      <option>Retail and wholesale</option>
+                      <option>Construction</option>
+                      <option>Agriculture</option>
+                      <option>Tourism and hospitality</option>
+                      <option>Healthcare</option>
+                      <option>Transport and logistics</option>
+                      <option>IT and software</option>
+                      <option>Education</option>
+                      <option>Other</option>
+                    </select>
+                    <span class="error">Please select an industry.</span>
+                  </div>
+
+                  <div class="field" data-role-only="employer" hidden>
+                    <label for="position_title">Your position <span class="req">*</span></label>
+                    <input id="position_title" name="position_title" type="text"
+                      placeholder="HR Officer, Owner, Recruiter" required />
+                    <span class="error">Please enter your position.</span>
+                  </div>
+
+                  <div class="field" data-role-only="employer" hidden>
+                    <label for="company_size">Company size</label>
+                    <select id="company_size" name="company_size">
+                      <option value="">Select…</option>
+                      <option>1-9</option>
+                      <option>10-49</option>
+                      <option>50-199</option>
+                      <option>200+</option>
+                    </select>
+                  </div>
+
+                  <div class="field" data-role-only="employer" hidden>
+                    <label for="business_permit_no">Business permit / DTI / SEC no.
+                      <span class="req">*</span></label>
+                    <input id="business_permit_no" name="business_permit_no" type="text" required />
+                    <span class="hint">Used by PESO to verify your establishment.</span>
+                    <span class="error">Please enter your registration number.</span>
+                  </div>
+
+                  <div class="field" data-role-only="employer" hidden>
+                    <label for="hiring_count">Workers needed this year</label>
+                    <input id="hiring_count" name="hiring_count" type="number" min="0" max="9999" value="0" />
+                  </div>
+
+                  <div class="field full" data-role-only="employer" hidden>
+                    <label for="company_address">Company address <span class="req">*</span></label>
+                    <textarea id="company_address" name="company_address" required></textarea>
+                    <span class="error">Please enter your company address.</span>
+                  </div>
+
+                  <div class="field full" data-role-only="employer" hidden>
+                    <label for="website">Website or Facebook page</label>
+                    <input id="website" name="website" type="url" placeholder="https://" />
+                    <span class="error">Please enter a valid URL (start with https://).</span>
+                  </div>
+
+                  <div class="field full" data-role-only="employer" hidden>
+                    <label for="business_permit">Upload business permit (optional)</label>
+                    <input id="business_permit" name="business_permit" type="file" accept=".pdf,.doc,.docx" />
+                    <span class="hint">PDF, DOC or DOCX. Maximum 5 MB. Speeds up
+                      verification.</span>
+                  </div>
+
+                  <div class="field full" data-role-only="employer" hidden>
+                    <div class="ck">
+                      <input id="consent_em" name="consent" type="checkbox" value="1" required />
+                      <label for="consent_em">I certify that this establishment is legitimate and
+                        agree to the processing of this data under the Data
+                        Privacy Act of 2012 (RA 10173).
+                        <span class="req">*</span></label>
+                    </div>
+                    <span class="error">Please tick the box to continue.</span>
+                  </div>
+
+                  <!-- step 1 actions -->
+                  <div class="acts" data-role-only="jobseeker">
+                    <button type="button" class="btn btn-p" data-next>
+                      Continue
+                    </button>
+                  </div>
+                  <div class="acts" data-role-only="employer" hidden>
+                    <button type="submit" class="btn btn-p" id="emSubmit">
+                      Create employer account
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- ============ STEP 2 : jobseeker only ============ -->
+              <div class="wpanel" data-step="2" hidden>
+                <h3>Skills and resume</h3>
+                <p class="help">
+                  Employers search these details. You can update them later.
+                </p>
+
+                <div class="fg">
+                  <div class="field">
+                    <label for="highest_education">Highest education <span class="req">*</span></label>
+                    <select id="highest_education" name="highest_education" required>
+                      <option value="">Select…</option>
+                      <option>Elementary</option>
+                      <option>High school graduate</option>
+                      <option>Senior high school</option>
+                      <option>Vocational / TESDA NC</option>
+                      <option>College graduate</option>
+                      <option>Postgraduate</option>
+                    </select>
+                    <span class="error">Please select your highest education.</span>
+                  </div>
+
+                  <div class="field">
+                    <label for="course">Course or trade</label>
+                    <input id="course" name="course" type="text" placeholder="e.g. Welding NC II, BSIT" />
+                  </div>
+
+                  <div class="field full">
+                    <label for="skills">Skills <span class="req">*</span></label>
+                    <textarea id="skills" name="skills" required
+                      placeholder="e.g. Customer service, MS Office, driving, encoding"></textarea>
+                    <span class="hint">Separate each skill with a comma.</span>
+                    <span class="error">Please list at least one skill.</span>
+                  </div>
+
+                  <div class="field">
+                    <label for="experience_years">Years of work experience</label>
+                    <input id="experience_years" name="experience_years" type="number" min="0" max="60" value="0" />
+                  </div>
+
+                  <div class="field full">
+                    <label for="resume">Resume <span class="req">*</span></label>
+                    <input id="resume" name="resume" type="file" accept=".pdf,.doc,.docx" required />
+                    <span class="hint" data-file-label="resume">PDF, DOC or DOCX. Maximum 5 MB.</span>
+                    <span class="error">Please attach your resume.</span>
+                  </div>
+
+                  <div class="acts">
+                    <button type="button" class="btn btn-line" data-back>
+                      Back
+                    </button>
+                    <button type="button" class="btn btn-p" data-next>
+                      Continue
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- ============ STEP 3 : jobseeker only ============ -->
+              <div class="wpanel" data-step="3" hidden>
+                <h3>Job preferences</h3>
+                <p class="help">
+                  We use this to match you with verified vacancies near you.
+                </p>
+
+                <div class="fg">
+                  <div class="field">
+                    <label for="preferred_job_type">Work arrangement <span class="req">*</span></label>
+                    <select id="preferred_job_type" name="preferred_job_type" required>
+                      <option value="">Select…</option>
+                      <option>Full-time</option>
+                      <option>Part-time</option>
+                      <option>Contractual</option>
+                      <option>Project-based</option>
+                      <option>Internship / OJT</option>
+                      <option>Freelance</option>
+                    </select>
+                    <span class="error">Please select a work arrangement.</span>
+                  </div>
+
+                  <div class="field">
+                    <label for="preferred_location">Preferred location <span class="req">*</span></label>
+                    <input id="preferred_location" name="preferred_location" type="text" required />
+                    <span class="error">Please enter your preferred location.</span>
+                  </div>
+
+                  <div class="field">
+                    <label for="expected_salary">Expected monthly pay (₱)</label>
+                    <input id="expected_salary" name="expected_salary" type="number" min="0" step="100"
+                      placeholder="e.g. 18000" />
+                  </div>
+
+                  <div class="field">
+                    <label for="availability">Available to start <span class="req">*</span></label>
+                    <select id="availability" name="availability" required>
+                      <option value="">Select…</option>
+                      <option>Immediately</option>
+                      <option>Within 2 weeks</option>
+                      <option>Within 1 month</option>
+                      <option>More than a month</option>
+                    </select>
+                    <span class="error">Please select your availability.</span>
+                  </div>
+
+                  <div class="field full">
+                    <div class="ck">
+                      <input id="consent_js" name="consent" type="checkbox" value="1" required />
+                      <label for="consent_js">My profile and resume are accurate and I agree to
+                        share them with verified PESO employers, in line with
+                        the Data Privacy Act of 2012 (RA 10173).
+                        <span class="req">*</span></label>
+                    </div>
+                    <span class="error">Please tick the box to continue.</span>
+                  </div>
+
+                  <div class="acts">
+                    <button type="button" class="btn btn-line" data-back>
+                      Back
+                    </button>
+                    <button type="submit" class="btn btn-p" id="jsSubmit">
+                      Create jobseeker account
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </form>
+          </div>
+
+          <p class="note">
+            Employer accounts are reviewed by PESO before vacancies go live.
+            Jobseeker accounts are activated immediately.
+          </p>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Shared app bar: role-aware, visible only after login -->
+  <header class="appbar" id="appbar" hidden>
+    <div class="container">
+      <a class="brand" href="#" id="appHome" aria-label="PESO Online, back to top"><span class="mark"
+          aria-hidden="true">PESO</span><span><strong>PESO Online</strong><small id="appSub">Member
+            area</small></span></a>
+      <nav class="tools" aria-label="Account">
+        <span class="pill" id="rolePill"></span>
+        <button class="btn btn-glass themeBtn" type="button" aria-label="Dark mode">
+          ◐<span class="lbl"> Dark mode</span>
+        </button>
+        <button class="btn btn-glass bell" id="bell" type="button" aria-expanded="false" aria-controls="pop"
+          aria-label="Notifications" hidden>
+          🔔<span class="badge" id="badge" hidden>0</span>
+        </button>
+        <div class="me">
+          <span class="av" id="av" aria-hidden="true">P</span>
+          <div><small>Signed in as</small><b id="meName"></b></div>
+        </div>
+        <button class="btn btn-gold" id="logout" type="button">
+          Log out
+        </button>
+      </nav>
+      <section class="pop" id="pop" aria-labelledby="popT" hidden>
+        <h2 id="popT">
+          Notifications
+          <button class="link" id="readAll" type="button">
+            Mark all read
+          </button>
+        </h2>
+        <ul id="nl"></ul>
+      </section>
+    </div>
+  </header>
+
+  <!-- ===== Jobseeker dashboard ===== -->
+  <div id="jsView" hidden>
+    <section class="banner" aria-labelledby="jsHi">
+      <div class="container bgrid">
+        <div>
+          <h1 id="jsHi"></h1>
+          <p class="sub">
+            Browse current job offers and apply in a few taps. All PESO
+            services are 100% free.
+          </p>
+          <div class="stats" role="list" aria-label="Quick stats">
+            <div role="listitem">
+              <b id="sSaved">0</b><span>Saved jobs</span>
+            </div>
+            <div role="listitem">
+              <b id="sApps">1</b><span>Active applications</span>
+            </div>
+            <div role="listitem">
+              <b id="sInt">0</b><span>Interviews</span>
+            </div>
+          </div>
+        </div>
+        <aside class="track" aria-labelledby="trT">
+          <h2 id="trT">Application tracking</h2>
+          <p class="tid" id="jsId"></p>
+          <div id="tkBox" aria-live="polite"></div>
+        </aside>
+      </div>
+    </section>
+    <main class="container" id="jsMain" tabindex="-1">
+      <div class="jh">
+        <h2>Job offers</h2>
+        <p>
+          Verified vacancies from employers in your area. All sample listings;
+          pay is in Philippine pesos (₱).
+        </p>
+      </div>
+      <div class="jbar" role="search">
+        <div class="field">
+          <label for="q">Search jobs</label><input id="q" type="search" placeholder="Job title, company or skill" />
+        </div>
+        <div class="field">
+          <label for="jsLoc">Location</label><select id="jsLoc"></select>
+        </div>
+      </div>
+      <div class="fchips" role="group" aria-label="Filter by category" id="chips"></div>
+      <p class="count" id="cnt" role="status" aria-live="polite"></p>
+      <div class="jgrid" id="grid"></div>
+    </main>
+  </div>
+
+  <!-- ===== Employer command center ===== -->
+  <div id="emView" hidden>
+    <main class="container" id="emMain" tabindex="-1">
+      <div class="hd">
+        <div>
+          <h1 id="emHi">Recruiter command center</h1>
+          <p>
+            Manage vacancies, applicants and hiring support. Listings are
+            verified by PESO under DOLE supervision.
+          </p>
+        </div>
+        <button class="btn btn-gold" type="button" id="newJob">
+          + Post a new vacancy
+        </button>
+      </div>
+      <div class="estats" role="list" aria-label="Summary">
+        <div class="stat" role="listitem">
+          <b id="s1">0</b><span>Active postings</span>
+        </div>
+        <div class="stat" role="listitem">
+          <b id="s2">0</b><span>Pending approval</span>
+        </div>
+        <div class="stat" role="listitem">
+          <b id="s3">0</b><span>Total applicants</span>
+        </div>
+        <div class="stat" role="listitem">
+          <b id="s4">0</b><span>Interviews scheduled</span>
+        </div>
+      </div>
+      <div class="tabs mtabs" role="tablist" aria-label="Employer sections" id="mt">
+        <button type="button" role="tab" id="mt-p" aria-controls="v-p" aria-selected="true" data-v="p">
+          Job postings</button><button type="button" role="tab" id="mt-a" aria-controls="v-a" aria-selected="false"
+          data-v="a" tabindex="-1">
+          Applicants</button><button type="button" role="tab" id="mt-h" aria-controls="v-h" aria-selected="false"
+          data-v="h" tabindex="-1">
+          Hiring assistance
+        </button>
+      </div>
+      <section class="view" id="v-p" role="tabpanel" aria-labelledby="mt-p">
+        <div class="card">
+          <h2>Your job postings</h2>
+          <div class="tw">
+            <table>
+              <caption class="sr">
+                Job postings
+              </caption>
+              <thead>
+                <tr>
+                  <th scope="col">Position</th>
+                  <th scope="col">Location</th>
+                  <th scope="col">Pay</th>
+                  <th scope="col">Slots</th>
+                  <th scope="col">Applicants</th>
+                  <th scope="col">Status</th>
+                  <th scope="col">Action</th>
+                </tr>
+              </thead>
+              <tbody id="jb"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+      <section class="view" id="v-a" role="tabpanel" aria-labelledby="mt-a" hidden>
+        <div class="card">
+          <h2>Applicants</h2>
+          <div class="fbar">
+            <div class="field">
+              <label for="fp">Posting</label><select id="fp"></select>
+            </div>
+            <div class="field">
+              <label for="fs">Status</label><select id="fs">
+                <option value="">All statuses</option>
+                <option>New</option>
+                <option>Shortlisted</option>
+                <option>Interview</option>
+                <option>Rejected</option>
+              </select>
+            </div>
+          </div>
+          <p class="hint" id="ac" role="status" aria-live="polite" style="margin-bottom: 8px"></p>
+          <div class="tw">
+            <table>
+              <caption class="sr">
+                Applicants
+              </caption>
+              <thead>
+                <tr>
+                  <th scope="col">Applicant</th>
+                  <th scope="col">Applied for</th>
+                  <th scope="col">Resume</th>
+                  <th scope="col">Status</th>
+                  <th scope="col">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="ab"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+      <section class="view" id="v-h" role="tabpanel" aria-labelledby="mt-h" hidden>
+        <div class="card">
+          <h2>Upcoming PESO events</h2>
+          <div class="egrid">
+            <div class="efair">
+              <time datetime="2026-11-14">Sat, Nov 14, 2026</time>
+              <h3>Mega Job Fair</h3>
+              <p>
+                Booths for verified employers. On-the-spot interviews. Sample
+                listing.
+              </p>
+              <button class="btn btn-p sm" type="button" data-pre="Mega Job Fair participation">
+                Reserve a booth
+              </button>
+            </div>
+            <div class="efair">
+              <time datetime="2027-01-16">Sat, Jan 16, 2027</time>
+              <h3>Youth and Special Placements Fair</h3>
+              <p>
+                Inclusive hiring for students, persons with disabilities and
+                returning workers.
+              </p>
+              <button class="btn btn-p sm" type="button" data-pre="Mega Job Fair participation">
+                Join this fair
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <h2>Request recruitment assistance</h2>
+          <p class="help">
+            A PESO officer will respond within three working days. This
+            service is free.
+          </p>
+          <div class="alert" role="alert"></div>
+          <form class="fg" id="fH" novalidate></form>
+        </div>
+        <div class="card">
+          <h2>Your requests</h2>
+          <div class="tw">
+            <table>
+              <caption class="sr">
+                Your requests
+              </caption>
+              <thead>
+                <tr>
+                  <th scope="col">Reference</th>
+                  <th scope="col">Type</th>
+                  <th scope="col">Headcount</th>
+                  <th scope="col">Status</th>
+                </tr>
+              </thead>
+              <tbody id="rb"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <footer>
+    <div class="container">
+      <div>
+        <strong>Public Employment Service Office</strong>Free employment
+        assistance for jobseekers and employers, supervised by the Department
+        of Labor and Employment (DOLE).
+      </div>
+      <div>
+        <strong>Office hours</strong>Monday to Friday, 8:00 AM to 5:00 PM
+      </div>
+      <p class="legal">
+        Personal data is processed under the Data Privacy Act of 2012 (RA
+        10173). Demonstration website; content and figures are illustrative. ©
+        2026 PESO.
+      </p>
+    </div>
+  </footer>
+
+  <dialog id="loginDlg">
+    <div class="dlg">
+      <button class="x" type="button" data-close aria-label="Close">×</button>
+      <h2>Log in</h2>
+      <!-- Simplified form without role tabs -->
+      <form action="login.php" method="post">
+        <div class="field">
+          <label for="loginEmail">Email address</label>
+          <input id="loginEmail" name="email" type="email" autocomplete="email" required />
+        </div>
+        <div class="field">
+          <label for="loginPassword">Password</label>
+          <div class="pw">
+            <input id="loginPassword" name="password" type="password" autocomplete="current-password" required />
+            <button type="button" data-toggle-pw="loginPassword">Show</button>
+          </div>
+        </div>
+        <div class="acts">
+          <button type="submit" class="btn btn-p">Log in</button>
+        </div>
+      </form>
+      <p class="alt2">No account yet? <a href="#join" data-close>Create one</a></p>
+    </div>
+  </dialog>
+
+  <dialog id="applyDlg" aria-labelledby="adT">
+    <form class="dlg" id="af" novalidate method="dialog">
+      <button class="x" type="button" id="dx" aria-label="Close">×</button>
+      <h2 id="adT">Confirm your application</h2>
+      <p class="cname">Review the details, check your resume and submit.</p>
+      <div class="sum">
+        <b id="dJob"></b>
+        <div class="cname" id="dMeta"></div>
+      </div>
+      <p><b>Resume</b></p>
+      <div class="resume" id="rs">
+        <span id="rn"></span><label class="btn btn-line" style="min-height: 38px; padding: 6px 14px"
+          for="rf">Replace</label><input class="sr" type="file" id="rf" accept=".pdf,.doc,.docx"
+          aria-describedby="re" />
+      </div>
+      <p class="err" id="re" role="alert"></p>
+      <div class="ck">
+        <input type="checkbox" id="ok" required aria-describedby="ce" /><label for="ok">I confirm my profile and resume
+          are accurate and I agree to share
+          them with this employer, in line with the Data Privacy Act.</label>
+      </div>
+      <p class="err" id="ce" role="alert"></p>
+      <div class="acts">
+        <button class="btn btn-line" type="button" id="dc">Cancel</button><button class="btn btn-gold" type="submit">
+          Submit application
+        </button>
+      </div>
+    </form>
+  </dialog>
+  <dialog id="dJ" aria-labelledby="djT">
+    <form class="dlg" id="fJ" novalidate method="dialog">
+      <button class="x" type="button" data-x aria-label="Close">×</button>
+      <h2 id="djT">Post a new vacancy</h2>
+      <p class="help">
+        New postings are reviewed by PESO before they go live.
+      </p>
+      <div class="alert" role="alert"></div>
+      <div class="fg" id="fJf"></div>
+    </form>
+  </dialog>
+  <dialog id="dI" aria-labelledby="diT">
+    <form class="dlg" id="fI" novalidate method="dialog">
+      <button class="x" type="button" data-x aria-label="Close">×</button>
+      <h2 id="diT">Schedule interview</h2>
+      <p class="help" id="diW"></p>
+      <div class="alert" role="alert"></div>
+      <div class="fg" id="fIf"></div>
+    </form>
+  </dialog>
+  <script src="js/auth.js" defer></script>
+  <script src="js/script.js" defer></script>
+</body>
+
+</html>
+
+
