@@ -2,10 +2,10 @@
 -- version 5.2.1
 -- https://www.phpmyadmin.net/
 --
--- Host: 127.0.0.1
--- Generation Time: Nov 08, 2026 at 04:36 AM
--- Server version: 10.4.32-MariaDB
--- PHP Version: 8.2.12
+-- Host: localhost
+-- Generation Time: Nov 08, 2026 at 07:27 AM
+-- Server version: 10.4.28-MariaDB
+-- PHP Version: 8.2.4
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -41,6 +41,13 @@ CREATE TABLE `employer_profiles` (
   `permit_original` varchar(255) DEFAULT NULL,
   `consent` tinyint(1) NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `employer_profiles`
+--
+
+INSERT INTO `employer_profiles` (`user_id`, `company_name`, `industry`, `position_title`, `company_size`, `business_permit_no`, `company_address`, `website`, `hiring_count`, `permit_filename`, `permit_original`, `consent`) VALUES
+(4, 'Microsoft', 'IT and software', 'Recruiter', '1-9', '696969', 'Naval, Biliran', '', 2, NULL, NULL, 1);
 
 -- --------------------------------------------------------
 
@@ -98,7 +105,8 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `tracking_id`, `role`, `email`, `password_hash`, `first_name`, `last_name`, `mobile`, `status`, `created_at`) VALUES
-(3, 'PESO-2026-A65D11', 'jobseeker', 'kristeljeanigano5@gmail.com', '$2y$10$AlNUaQAks3ZQVtF0ptUS6Oq68ucnUCvSCBPHE9dVT6iosJQTRcUE2', 'Kristel Jean', 'Igano', '09876543210', 'active', '2026-11-04 14:38:24');
+(3, 'PESO-2026-A65D11', 'jobseeker', 'kristeljeanigano5@gmail.com', '$2y$10$AlNUaQAks3ZQVtF0ptUS6Oq68ucnUCvSCBPHE9dVT6iosJQTRcUE2', 'Kristel Jean', 'Igano', '09876543210', 'active', '2026-11-04 14:38:24'),
+(4, 'PESO-2026-E36DDB', 'employer', 'cheesedog@gmail.com', '$2y$10$mvr6RiUi7elfVDdN4jBpuOcXChRA.GAE4xwn.0fncrx70t/MSFOHO', 'Cheese', 'Dog', '09876543212', 'pending', '2026-11-08 06:19:02');
 
 --
 -- Indexes for dumped tables
@@ -132,7 +140,7 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- Constraints for dumped tables

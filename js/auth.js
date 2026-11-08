@@ -1,6 +1,5 @@
 (function () {
   "use strict";
-
   /* ---------- registration wizard ---------- */
   const form = document.getElementById("joinForm");
   if (form) {
@@ -77,7 +76,6 @@
         if (el.disabled) return;
         const f = fieldOf(el);
         let bad = !el.checkValidity();
-
         if (el.id === "confirm_password") {
           bad =
             el.value !== document.getElementById("password").value || !el.value;
@@ -115,23 +113,20 @@
     });
 
     /* =========================================================
-       FIXED SUBMIT HANDLER
-       Ensures fields are ENABLED before submission so the browser 
-       actually sends their values to PHP.
-       ========================================================= */
+		FIXED SUBMIT HANDLER
+		Ensures fields are ENABLED before submission so the browser
+		actually sends their values to PHP.
+		========================================================= */
     form.addEventListener("submit", (e) => {
       let badStep = null;
-
       // 1. Validate all relevant steps
       panels.forEach((p) => {
         const isJobseeker = roleInput.value === "jobseeker";
         const relevant = isJobseeker || p.dataset.step === "1";
         if (!relevant) return;
 
-        // Temporarily show and enable relevant controls for validation
         const wasHidden = p.hidden;
         if (wasHidden) p.hidden = false;
-
         controls(p).forEach((c) => {
           const roleOnly = c.closest("[data-role-only]");
           if (!roleOnly || roleOnly.dataset.roleOnly === roleInput.value) {
@@ -157,16 +152,14 @@
       }
 
       // 3. CRITICAL FIX: Ensure all relevant fields are ENABLED for submission.
-      // (Browsers will NOT send the values of disabled fields to the server)
       panels.forEach((p) => {
         const isJobseeker = roleInput.value === "jobseeker";
         const relevant = isJobseeker || p.dataset.step === "1";
         if (!relevant) return;
-
         controls(p).forEach((c) => {
           const roleOnly = c.closest("[data-role-only]");
           if (!roleOnly || roleOnly.dataset.roleOnly === roleInput.value) {
-            c.disabled = false; // MUST be enabled to be submitted
+            c.disabled = false;
           }
         });
       });
@@ -189,6 +182,7 @@
     tabs.forEach((t) =>
       t.addEventListener("click", () => setRole(t.dataset.role)),
     );
+
     document
       .querySelectorAll("[data-role-link]")
       .forEach((a) =>
@@ -200,15 +194,8 @@
   }
 
   /* ---------- login dialog tabs ---------- */
-  const loginRole = document.getElementById("loginRole");
-  document.querySelectorAll("[data-login-role]").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      if (loginRole) loginRole.value = btn.dataset.loginRole;
-      document
-        .querySelectorAll("[data-login-role]")
-        .forEach((b) => b.setAttribute("aria-selected", String(b === btn)));
-    });
-  });
+  // Role is now auto-detected from the database in login.php.
+  // The tabs have been removed from the login dialog for a seamless experience.
 
   /* ---------- password reveal ---------- */
   document.querySelectorAll("[data-toggle-pw]").forEach((btn) => {
