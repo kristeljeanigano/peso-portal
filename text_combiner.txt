@@ -1,8 +1,0 @@
-output="combined_code.txt"
-> "$output" # Clears or creates the output file
-
-find . -type f \( -name "*.php" -o -name "*.html" -o -name "*.js" -o -name "*.css" \) -print0 | while IFS= read -r -d '' file; do
-  echo "=== FILE: $file ===" >> "$output"
-  cat "$file" >> "$output"
-  echo -e "\n\n" >> "$output"
-done

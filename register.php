@@ -3,7 +3,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/db.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    header('Location: peso-portal.html#join');
+    header('Location: index.html#join');
     exit;
 }
 
@@ -25,7 +25,7 @@ function fail(array $errors): void {
        . '<h3>We could not create your account</h3>'
        . '<p class="help">Please go back and fix the following:</p>'
        . '<div class="alert show"><ul>' . $items . '</ul></div>'
-       . '<div class="acts"><a class="btn btn-p" href="peso-portal.html#join">Back to registration</a>'
+       . '<div class="acts"><a class="btn btn-p" href="index.html#join">Back to registration</a>'
        . '<button class="btn btn-line" type="button" onclick="history.back()">Keep my entries</button>'
        . '</div></div></div></div></section></body></html>';
     exit;

@@ -36,7 +36,7 @@
 				<button type="submit" class="btn btn-p">Log in</button>
 			</div>
 		</form>
-		<p class="alt2">No account yet? <a href="peso-portal.html#join" data-close>Create one</a></p>
+		<p class="alt2">No account yet? <a href="index.html#join" data-close>Create one</a></p>
 	</div>
 </dialog>
 
