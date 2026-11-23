@@ -3,7 +3,7 @@ require_once __DIR__ . '/db.php';
 
 // Security: Redirect if not logged in
 if (empty($_SESSION['user_id'])) {
-    header('Location: peso-portal.html');
+    header('Location: index.html');
     exit;
 }
 

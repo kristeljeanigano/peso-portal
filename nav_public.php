@@ -7,7 +7,7 @@
 </div>
 <header class="nav">
   <div class="container">
-    <a href="peso-portal.html" class="brand">
+    <a href="index.html" class="brand">
       <span class="mark">PESO</span>
       <span>
         <strong>PESO Online</strong>
@@ -15,10 +15,10 @@
       </span>
     </a>
     <nav class="links" id="primaryNav">
-      <a href="peso-portal.html#trends" class="l">Market trends</a>
-      <a href="peso-portal.html#services" class="l">Services</a>
-      <a href="peso-portal.html#programs" class="l">Programs</a>
-      <a href="peso-portal.html#join" class="l">Create account</a>
+      <a href="index.html#trends" class="l">Market trends</a>
+      <a href="index.html#services" class="l">Services</a>
+      <a href="index.html#programs" class="l">Programs</a>
+      <a href="index.html#join" class="l">Create account</a>
       <button type="button" class="btn btn-line" onclick="document.getElementById('loginDlg').showModal()">Log in</button>
     </nav>
     <button class="toggle" aria-expanded="false" aria-controls="primaryNav">

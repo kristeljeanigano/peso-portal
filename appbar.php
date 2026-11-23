@@ -1,7 +1,7 @@
 <?php
 // Security check: Redirect to home if not logged in
 if (empty($_SESSION['user_id'])) {
-    header('Location: peso-portal.html');
+    header('Location: index.html');
     exit;
 }
 $isEm = ($_SESSION['role'] ?? '') === 'employer';

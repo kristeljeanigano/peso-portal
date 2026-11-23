@@ -1,7 +1,7 @@
 <?php // login.php
 declare(strict_types=1);
 require_once __DIR__ . '/db.php';
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') { header('Location: peso-portal.html'); exit; }
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') { header('Location: index.html'); exit; }
 
 $email = mb_strtolower(trim((string)($_POST['email'] ?? '')));
 $pass  = (string)($_POST['password'] ?? '');
@@ -16,7 +16,7 @@ if (!$u || !password_verify($pass, $u['password_hash'])) {
     echo '<!doctype html><meta charset="utf-8"><link rel="stylesheet" href="css/styles.css">'
         . '<section class="block"><div class="container"><div class="shell"><div class="wpanel">'
         . '<h3>Log in failed</h3><p class="help">Wrong email or password.</p>'
-        . '<div class="acts"><a class="btn btn-p" href="peso-portal.html">Back</a></div>'
+        . '<div class="acts"><a class="btn btn-p" href="index.html">Back</a></div>'
         . '</div></div></div></section>';
     exit;
 }

@@ -1,6 +1,6 @@
 <?php
 require_once __DIR__ . '/db.php';
-if (empty($_SESSION['just_registered'])) { header('Location: peso-portal.html#join'); exit; }
+if (empty($_SESSION['just_registered'])) { header('Location: index.html#join'); exit; }
 unset($_SESSION['just_registered']);
 
 // Set the page title for the browser tab
