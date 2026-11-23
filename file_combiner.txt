@@ -1,0 +1,7 @@
+find /opt/lampp/htdocs/peso-portal/ -type f ! -name "combined_output.txt" -exec sh -c '
+  for file do
+    printf "===== %s =====\n" "$file"
+    cat "$file"
+    printf "\n\n"
+  done
+' _ {} + > combined_output.txt
